@@ -1,1 +1,4 @@
-#GrainMother
+# GrainMother
+
+A granular synth plugin
+
