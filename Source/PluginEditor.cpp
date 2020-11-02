@@ -25,10 +25,16 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     , panningRandSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
     , readposRandSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
     , velocityRandSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
+    , thumbnailCache(5)
+    , audioformComponent(512, formatManager, thumbnailCache)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(800, 600);
+
+    addAndMakeVisible(&audioformComponent);
+    formatManager.registerBasicFormats();
+
+    setSize(800, 650);
     addAndMakeVisible(audioFileDialogButton);
     audioFileDialogButton.addListener(this);
 
@@ -79,21 +85,21 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     intervalRandSlider.setValue(0.0);
 
     addAndMakeVisible(durationRandSlider);
-    durationRandSlider.setRange(0, 1000);
+    durationRandSlider.setRange(0, 1);
     durationRandSlider.onValueChange = [this] {
         audioProcessor.setDurationRand((float)durationRandSlider.getValue());
     };
     durationRandSlider.setValue(0);
 
     addAndMakeVisible(panningRandSlider);
-    panningRandSlider.setRange(0, 2);
+    panningRandSlider.setRange(0, 1);
     panningRandSlider.onValueChange = [this] {
         audioProcessor.setPanningRand((float)panningRandSlider.getValue());
     };
     panningRandSlider.setValue(0);
 
     addAndMakeVisible(readposRandSlider);
-    readposRandSlider.setRange(0, 10);
+    readposRandSlider.setRange(0, 1);
     readposRandSlider.onValueChange = [this] {
         audioProcessor.setReadposRand((float)readposRandSlider.getValue());
     };
@@ -145,6 +151,7 @@ void GrainMotherAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
+
     audioFileDialogButton.setBounds({ 10, 10, 200, 30 });
 
     intervalSlider.setBounds(100, 100, 100, 100);
@@ -164,6 +171,8 @@ void GrainMotherAudioProcessorEditor::resized()
     panningLabel.setBounds(300, 50, 100, 30);
     readposLabel.setBounds(400, 50, 100, 30);
     velocityLabel.setBounds(500, 50, 100, 30);
+    juce::Rectangle<int> thumbnailBounds(10, 300, getWidth() - 20, getHeight() - 300);
+    audioformComponent.setBounds(thumbnailBounds);
 
     activeGrainsLabel.setBounds(10, getHeight() - 40, 100, 30);
 
@@ -182,6 +191,7 @@ void GrainMotherAudioProcessorEditor::buttonClicked(juce::Button* button)
         {
             juce::File file(fileChooser.getResult());
             audioProcessor.loadAudioFile(file);
+            audioformComponent.setFile(file);
         }
     }
 

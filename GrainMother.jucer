@@ -1,50 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="kq21s7" name="GrainMother" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
+              pluginCharacteristicsValue="pluginIsSynth" pluginVST3Category="Instrument"
+              pluginRTASCategory="0">
   <MAINGROUP id="qIbWlt" name="GrainMother">
+    <GROUP id="{96870F54-F785-5812-1F20-6CF3E532D44C}" name="puro">
+      <FILE id="fmqwdD" name="aligned_pool.hpp" compile="0" resource="0"
+            file="puro/src/aligned_pool.hpp"/>
+      <FILE id="Cyts85" name="alignment.hpp" compile="0" resource="0" file="puro/src/alignment.hpp"/>
+      <FILE id="KT3HP1" name="buffer.hpp" compile="0" resource="0" file="puro/src/buffer.hpp"/>
+      <FILE id="OcoJBT" name="buffer_operations.hpp" compile="0" resource="0"
+            file="puro/src/buffer_operations.hpp"/>
+      <FILE id="YnuCf0" name="defs.hpp" compile="0" resource="0" file="puro/src/defs.hpp"/>
+      <FILE id="BkpbUE" name="envelope.hpp" compile="0" resource="0" file="puro/src/envelope.hpp"/>
+      <FILE id="DX5L4a" name="interpolation.hpp" compile="0" resource="0"
+            file="puro/src/interpolation.hpp"/>
+      <FILE id="tAU1TT" name="math_scalar.hpp" compile="0" resource="0" file="puro/src/math_scalar.hpp"/>
+      <FILE id="bH7yrV" name="math_vector.hpp" compile="0" resource="0" file="puro/src/math_vector.hpp"/>
+      <FILE id="oXURHo" name="memory_source.hpp" compile="0" resource="0"
+            file="puro/src/memory_source.hpp"/>
+      <FILE id="R65RQN" name="node_stack.hpp" compile="0" resource="0" file="puro/src/node_stack.hpp"/>
+      <FILE id="iv32js" name="panning.hpp" compile="0" resource="0" file="puro/src/panning.hpp"/>
+      <FILE id="f0LlML" name="prints.hpp" compile="0" resource="0" file="puro/src/prints.hpp"/>
+      <FILE id="xL58iR" name="puro.hpp" compile="0" resource="0" file="puro/src/puro.hpp"/>
+      <FILE id="Sv76zq" name="ring_buffer.hpp" compile="0" resource="0" file="puro/src/ring_buffer.hpp"/>
+      <FILE id="mjxYFT" name="sfinae.hpp" compile="0" resource="0" file="puro/src/sfinae.hpp"/>
+      <FILE id="nifLLh" name="signal.hpp" compile="0" resource="0" file="puro/src/signal.hpp"/>
+      <FILE id="EDkVIV" name="spectrum.hpp" compile="0" resource="0" file="puro/src/spectrum.hpp"/>
+      <FILE id="dV2xT2" name="utility.hpp" compile="0" resource="0" file="puro/src/utility.hpp"/>
+    </GROUP>
     <GROUP id="{7D3C0223-817A-9626-D2F9-1C41FFCF1710}" name="Source">
+      <FILE id="khdxXQ" name="PuroEngine.h" compile="0" resource="0" file="Source/PuroEngine.h"/>
       <FILE id="oPHoMW" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="aIZx3l" name="PluginProcessor.h" compile="0" resource="0"
             file="Source/PluginProcessor.h"/>
       <FILE id="m2Pxw7" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
-      <FILE id="d987ui" name="PuroEngine.h" compile="0" resource="0" file="../../../puro-juce-granular/Source/PuroEngine.h"/>
       <FILE id="xGwh56" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
-    </GROUP>
-    <GROUP id="{ACDB1693-78E5-54DB-3BA0-BFA89B2CFA23}" name="puro">
-      <FILE id="h2kBZk" name="aligned_pool.hpp" compile="0" resource="0"
-            file="../puro/src/aligned_pool.hpp"/>
-      <FILE id="DlmH3a" name="alignment.hpp" compile="0" resource="0" file="../puro/src/alignment.hpp"/>
-      <FILE id="wqqwES" name="buffer.hpp" compile="0" resource="0" file="../puro/src/buffer.hpp"/>
-      <FILE id="IOIxpH" name="buffer_operations.hpp" compile="0" resource="0"
-            file="../puro/src/buffer_operations.hpp"/>
-      <FILE id="Gn9Omf" name="defs.hpp" compile="0" resource="0" file="../puro/src/defs.hpp"/>
-      <FILE id="E45pdH" name="envelope.hpp" compile="0" resource="0" file="../puro/src/envelope.hpp"/>
-      <FILE id="hoNfGc" name="interpolation.hpp" compile="0" resource="0"
-            file="../puro/src/interpolation.hpp"/>
-      <FILE id="BSWBNZ" name="math_scalar.hpp" compile="0" resource="0" file="../puro/src/math_scalar.hpp"/>
-      <FILE id="zFDsyi" name="math_vector.hpp" compile="0" resource="0" file="../puro/src/math_vector.hpp"/>
-      <FILE id="M5TpEr" name="memory_source.hpp" compile="0" resource="0"
-            file="../puro/src/memory_source.hpp"/>
-      <FILE id="fDE2HC" name="node_stack.hpp" compile="0" resource="0" file="../puro/src/node_stack.hpp"/>
-      <FILE id="yIcW9n" name="panning.hpp" compile="0" resource="0" file="../puro/src/panning.hpp"/>
-      <FILE id="CiynVL" name="prints.hpp" compile="0" resource="0" file="../puro/src/prints.hpp"/>
-      <FILE id="rJUJd9" name="puro.hpp" compile="0" resource="0" file="../puro/src/puro.hpp"/>
-      <FILE id="Jcu9WP" name="ring_buffer.hpp" compile="0" resource="0" file="../puro/src/ring_buffer.hpp"/>
-      <FILE id="vK3uXo" name="sfinae.hpp" compile="0" resource="0" file="../puro/src/sfinae.hpp"/>
-      <FILE id="bWxMan" name="signal.hpp" compile="0" resource="0" file="../puro/src/signal.hpp"/>
-      <FILE id="cIbExY" name="spectrum.hpp" compile="0" resource="0" file="../puro/src/spectrum.hpp"/>
-      <FILE id="BOVT5w" name="utility.hpp" compile="0" resource="0" file="../puro/src/utility.hpp"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
     <VS2019 targetFolder="Builds/VisualStudio2019">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="GrainMother"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="GrainMother"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="GrainMother" useRuntimeLibDLL="0"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="GrainMother" useRuntimeLibDLL="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../../JUCE/modules"/>
