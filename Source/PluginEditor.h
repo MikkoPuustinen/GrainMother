@@ -19,30 +19,61 @@
 */
 
 class AudioformComponent : public::juce::Component
-    , private::juce::ChangeListener
+                         , private::juce::ChangeListener
 {
 public:
     AudioformComponent(int sourceSamplesPerThumbnailSample,
         juce::AudioFormatManager& formatManager,
-        juce::AudioThumbnailCache& cache)
-        : thumbnail(sourceSamplesPerThumbnailSample, formatManager, cache)
-
+        juce::AudioThumbnailCache& cache,
+        GrainMotherAudioProcessor& p)
+        : thumbnail(sourceSamplesPerThumbnailSample, formatManager, cache), audioProcessor(p), start(3.0f), end(400.0f)
     {
         thumbnail.addChangeListener(this);
     }
 
     void paint(juce::Graphics& g) override
     {
-        if (thumbnail.getNumChannels() == 0)
+        if (hasFile())
             paintIfNoFileLoaded(g);
         else
             paintIfFileLoaded(g);
     }
+    boolean hasFile()
+    {
+        return thumbnail.getNumChannels() == 0;
+    }
     void setFile(const juce::File& file)
     {
         thumbnail.setSource(new juce::FileInputSource(file));
-    }
 
+
+        auto multiplier = audioProcessor.getMaximumPosition();
+        audioProcessor.setReadpos(start / getLocalBounds().getWidth());
+        const float dur2 = (end - start) / getLocalBounds().getWidth();
+        audioProcessor.setDuration(dur2);
+    }
+    void mouseDown(const juce::MouseEvent& event) override
+    {
+        start = event.position.x;// / getLocalBounds().getWidth();
+        auto multiplier = audioProcessor.getMaximumPosition();
+        const float rpos = start / getLocalBounds().getWidth() * multiplier;
+        audioProcessor.setReadpos(start / getLocalBounds().getWidth() * multiplier);
+        repaint();
+    }
+    void mouseDrag(const juce::MouseEvent& event) override
+    {
+        end = event.position.x;
+        auto multiplier = audioProcessor.getMaximumPosition();
+        if (start > end) { // dragging from right to left
+            audioProcessor.setReadpos(end / getLocalBounds().getWidth() * multiplier);
+            audioProcessor.setDuration((start - end) / getLocalBounds().getWidth() * multiplier);
+        } else { // dragging from left to right
+            const float dur2 = (end - start) / getLocalBounds().getWidth() * multiplier;
+            audioProcessor.setDuration(dur2);
+        }
+        
+        repaint();
+    }
     void paintIfNoFileLoaded(juce::Graphics& g)
     {
         g.fillAll(juce::Colours::white);
@@ -53,14 +84,29 @@ public:
     void paintIfFileLoaded(juce::Graphics& g)
     {
         g.fillAll(juce::Colours::white);
-
+        float duration = 0;
+        if (start > end) {
+            duration = start - end;
+            if (start > 0 && duration > 0) {
+                g.setColour(juce::Colour(150, 255, 248));
+                g.fillRect((int)end, 0, (int)duration, getLocalBounds().getHeight());
+            }
+        } else {
+            duration = end - start;
+            if (start > 0 && duration > 0) {
+                g.setColour(juce::Colour(150, 255, 248));
+                g.fillRect((int)start, 0, (int)duration, getLocalBounds().getHeight());
+            }
+        }
         g.setColour(juce::Colour(0,102,102));
 
         thumbnail.drawChannels(g, getLocalBounds(), 0.0, thumbnail.getTotalLength(), 1.0f);
         g.setColour(juce::Colour(17, 173, 173));
         thumbnail.drawChannels(g, getLocalBounds(), 0.0, thumbnail.getTotalLength(), 0.55f);
-    }
 
+        //const float begin = getLocalBounds().getWidth() / (start * 100);
+        
+    }
     void changeListenerCallback(juce::ChangeBroadcaster* source) override
     {
         if (source == &thumbnail)
@@ -73,9 +119,27 @@ private:
         repaint();
     }
     juce::AudioThumbnail thumbnail;
+    GrainMotherAudioProcessor& audioProcessor;
+
+    float start;
+    float end;
+
+    //float multiplier;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioformComponent)
 
+};
+
+class AudioformPositionSelector : public juce::Component
+{
+public:
+    void paint(juce::Graphics&) override
+    {
+
+    }
+private:
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioformPositionSelector)
 };
 
 /*

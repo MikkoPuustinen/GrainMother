@@ -43,7 +43,8 @@ void GrainMotherAudioProcessor::setInterval(float interval)
 
 void GrainMotherAudioProcessor::setDuration(float duration)
 {
-    puroEngine.durationParam.centre = (float)(duration / 1000.0f * this->getSampleRate());
+    float dd = duration * this->getSampleRate();
+    puroEngine.durationParam.centre = (float)(duration * this->getSampleRate());
 }
 void GrainMotherAudioProcessor::setPanning(float panning)
 {
@@ -261,5 +262,10 @@ void GrainMotherAudioProcessor::loadAudioFile(juce::File file)
         , audioFileBuffer.getArrayOfWritePointers());
 
     //readposSlider.setRange(0, audioFileBuffer.getNumSamples() / getSampleRate());
+    puroEngine.durationParam.maximum = audioFileBuffer.getNumSamples();
     puroEngine.readposParam.maximum = audioFileBuffer.getNumSamples();
+}
+
+float GrainMotherAudioProcessor::getMaximumPosition() {
+    return audioFileBuffer.getNumSamples() / getSampleRate();
 }

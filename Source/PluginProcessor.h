@@ -66,6 +66,7 @@ public:
     void setReadposRand(float readpos);
     void setVelocityRand(float velocity);
     int getGrainNum();
+    float getMaximumPosition();
 
 private:
     PuroEngine puroEngine;

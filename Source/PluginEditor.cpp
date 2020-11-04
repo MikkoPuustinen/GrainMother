@@ -26,7 +26,7 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     , readposRandSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
     , velocityRandSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
     , thumbnailCache(5)
-    , audioformComponent(512, formatManager, thumbnailCache)
+    , audioformComponent(1024, formatManager, thumbnailCache, p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -50,11 +50,11 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     intervalSlider.setValue(1.0);
 
     addAndMakeVisible(durationSlider);
-    durationSlider.setRange(1, 4000);
+    durationSlider.setRange(1, 88200);
     durationSlider.onValueChange = [this] {
-        audioProcessor.setDuration((float)durationSlider.getValue());
+        //audioProcessor.setDuration((float)durationSlider.getValue());
     };
-    durationSlider.setValue(300);
+    durationSlider.setValue(44100);
 
     addAndMakeVisible(panningSlider);
     panningSlider.setRange(-1, 1);

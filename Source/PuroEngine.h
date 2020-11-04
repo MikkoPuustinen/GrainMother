@@ -67,6 +67,7 @@ bool process_grain(BufferType dst, ElementType& grain, ContextType& context, con
     grain.readPos = puro::interp3_fill(audio, source, grain.readPos, grain.readInc);
 
     // truncate temp envelope buffer to fit the length of our audio, and fill
+    auto x = audio.length();
     auto envelope = context.envelope.trunc(audio.length());
     grain.envelopePos = puro::envelope_halfcos_fill(envelope, grain.envelopePos, grain.envelopeInc);
 
@@ -88,7 +89,7 @@ public:
     PuroEngine()
         : timer(0)
         , intervalParam(1.0f, 0.0f, 0.1f, 5000.0f)
-        , durationParam(100.0f, 100.0f, 0, 44100 * 10)
+        , durationParam(100.0f, 100.0f, 0, 44100 * 5)
         , panningParam(0.0f, 0.0f, -1.0f, 1.0f)
         , readposParam(44100.0f, 0.0f, 0, 88200)
         , velocityParam(1.0f, 0.0f, 0.25f, 4.0f)
