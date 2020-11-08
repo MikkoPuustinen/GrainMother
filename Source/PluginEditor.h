@@ -45,34 +45,10 @@ public:
     void setFile(const juce::File& file)
     {
         thumbnail.setSource(new juce::FileInputSource(file));
-
-
         auto multiplier = audioProcessor.getMaximumPosition();
         audioProcessor.setReadpos(start / getLocalBounds().getWidth());
         const float dur2 = (end - start) / getLocalBounds().getWidth();
         audioProcessor.setDuration(dur2);
-    }
-    void mouseDown(const juce::MouseEvent& event) override
-    {
-        start = event.position.x;// / getLocalBounds().getWidth();
-        auto multiplier = audioProcessor.getMaximumPosition();
-        const float rpos = start / getLocalBounds().getWidth() * multiplier;
-        audioProcessor.setReadpos(start / getLocalBounds().getWidth() * multiplier);
-        repaint();
-    }
-    void mouseDrag(const juce::MouseEvent& event) override
-    {
-        end = event.position.x;
-        auto multiplier = audioProcessor.getMaximumPosition();
-        if (start > end) { // dragging from right to left
-            audioProcessor.setReadpos(end / getLocalBounds().getWidth() * multiplier);
-            audioProcessor.setDuration((start - end) / getLocalBounds().getWidth() * multiplier);
-        } else { // dragging from left to right
-            const float dur2 = (end - start) / getLocalBounds().getWidth() * multiplier;
-            audioProcessor.setDuration(dur2);
-        }
-        
-        repaint();
     }
     void paintIfNoFileLoaded(juce::Graphics& g)
     {
@@ -84,28 +60,10 @@ public:
     void paintIfFileLoaded(juce::Graphics& g)
     {
         g.fillAll(juce::Colours::white);
-        float duration = 0;
-        if (start > end) {
-            duration = start - end;
-            if (start > 0 && duration > 0) {
-                g.setColour(juce::Colour(150, 255, 248));
-                g.fillRect((int)end, 0, (int)duration, getLocalBounds().getHeight());
-            }
-        } else {
-            duration = end - start;
-            if (start > 0 && duration > 0) {
-                g.setColour(juce::Colour(150, 255, 248));
-                g.fillRect((int)start, 0, (int)duration, getLocalBounds().getHeight());
-            }
-        }
         g.setColour(juce::Colour(0,102,102));
-
         thumbnail.drawChannels(g, getLocalBounds(), 0.0, thumbnail.getTotalLength(), 1.0f);
         g.setColour(juce::Colour(17, 173, 173));
-        thumbnail.drawChannels(g, getLocalBounds(), 0.0, thumbnail.getTotalLength(), 0.55f);
-
-        //const float begin = getLocalBounds().getWidth() / (start * 100);
-        
+        thumbnail.drawChannels(g, getLocalBounds(), 0.0, thumbnail.getTotalLength(), 0.55f);        
     }
     void changeListenerCallback(juce::ChangeBroadcaster* source) override
     {
@@ -130,16 +88,84 @@ private:
 
 };
 
-class AudioformPositionSelector : public juce::Component
+class GrainVisualizer : public juce::Component
+                      , public juce::Timer
 {
 public:
-    void paint(juce::Graphics&) override
+    GrainVisualizer(GrainMotherAudioProcessor& p) : audioProcessor(p) 
     {
-
+        startTimer(50);
     }
-private:
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioformPositionSelector)
+    void mouseDown(const juce::MouseEvent& event) override
+    {
+        start = event.position.x;
+        auto multiplier = audioProcessor.getMaximumPosition();
+        const float rpos = start / getLocalBounds().getWidth() * multiplier;
+        audioProcessor.setReadpos(start / getLocalBounds().getWidth() * multiplier);
+        repaint();
+    }
+    void mouseDrag(const juce::MouseEvent& event) override
+    {
+        end = event.position.x;
+        auto multiplier = audioProcessor.getMaximumPosition();
+        if (start > end) { // dragging from right to left
+            audioProcessor.setReadpos(end / getLocalBounds().getWidth() * multiplier);
+            audioProcessor.setDuration((start - end) / getLocalBounds().getWidth() * multiplier);
+        }
+        else { // dragging from left to right
+            const float dur2 = (end - start) / getLocalBounds().getWidth() * multiplier;
+            audioProcessor.setDuration(dur2);
+        }
+
+        repaint();
+    }
+    
+    void paint(juce::Graphics& g) override
+    {
+        float duration = 0;
+        if (start > end) {
+            duration = start - end;
+            if (start > 0 && duration > 0) {
+                g.setColour(juce::Colour(150, 255, juce::uint8(248), juce::uint8(128)));
+                g.fillRect((int)end, 0, (int)duration, getLocalBounds().getHeight());
+            }
+        } else {
+            duration = end - start;
+            if (start > 0 && duration > 0) {
+                g.setColour(juce::Colour(150, 255, juce::uint8(248), juce::uint8(128)));
+                g.fillRect((int)start, 0, (int)duration, getLocalBounds().getHeight());
+            }
+        }
+        g.setColour(juce::Colour(0,181, 142));
+        int grainAmount = (int)grains.size() / 2;
+        for (auto&& grain : grains) {
+            auto& x = grain.get();
+            int heightDev;
+            if (grainAmount < 1) {
+                heightDev = 0;
+            } else {
+                heightDev = juce::Random::getSystemRandom().nextInt(juce::Range<int>(-1 * grainAmount, grainAmount));
+            }
+            const float position = x.readPos / audioProcessor.getMaximumSampleCount() * getLocalBounds().getWidth();
+            g.fillEllipse(position, getLocalBounds().getHeight() / 2 + heightDev, 10, 10);
+        }
+    }
+    void timerCallback() override
+    {
+        this->grains = audioProcessor.getGrainPool();
+        repaint();
+    }
+
+private:
+    puro::AlignedPool<Grain> grains;
+
+    GrainMotherAudioProcessor& audioProcessor;
+
+
+    float start;
+    float end;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GrainVisualizer)
 };
 
 /*
@@ -197,6 +223,8 @@ private:
     juce::AudioThumbnailCache thumbnailCache;
 
     AudioformComponent audioformComponent;
+
+    GrainVisualizer grainVisualizer;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GrainMotherAudioProcessorEditor)
 };

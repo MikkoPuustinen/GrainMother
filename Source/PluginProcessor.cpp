@@ -91,6 +91,11 @@ int GrainMotherAudioProcessor::getGrainNum()
     return puroEngine.pool.size();
 }
 
+puro::AlignedPool<Grain> GrainMotherAudioProcessor::getGrainPool()
+{
+    return puroEngine.pool;
+}
+
 bool GrainMotherAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
@@ -268,4 +273,8 @@ void GrainMotherAudioProcessor::loadAudioFile(juce::File file)
 
 float GrainMotherAudioProcessor::getMaximumPosition() {
     return audioFileBuffer.getNumSamples() / getSampleRate();
+}
+
+float GrainMotherAudioProcessor::getMaximumSampleCount() {
+    return audioFileBuffer.getNumSamples();
 }

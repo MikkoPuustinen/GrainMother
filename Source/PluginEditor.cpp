@@ -27,12 +27,18 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     , velocityRandSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
     , thumbnailCache(5)
     , audioformComponent(1024, formatManager, thumbnailCache, p)
+    , grainVisualizer(p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
 
-    addAndMakeVisible(&audioformComponent);
+    
     formatManager.registerBasicFormats();
+    addAndMakeVisible(&audioformComponent);
+
+    addAndMakeVisible(&grainVisualizer);
+    
+
 
     setSize(800, 650);
     addAndMakeVisible(audioFileDialogButton);
@@ -173,6 +179,7 @@ void GrainMotherAudioProcessorEditor::resized()
     velocityLabel.setBounds(500, 50, 100, 30);
     juce::Rectangle<int> thumbnailBounds(10, 300, getWidth() - 20, getHeight() - 300);
     audioformComponent.setBounds(thumbnailBounds);
+    grainVisualizer.setBounds(thumbnailBounds);
 
     activeGrainsLabel.setBounds(10, getHeight() - 40, 100, 30);
 

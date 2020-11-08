@@ -66,7 +66,10 @@ public:
     void setReadposRand(float readpos);
     void setVelocityRand(float velocity);
     int getGrainNum();
+    puro::AlignedPool<Grain> getGrainPool();
     float getMaximumPosition();
+    float getMaximumSampleCount();
+    
 
 private:
     PuroEngine puroEngine;
