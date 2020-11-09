@@ -10,15 +10,16 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAudioProcessor& p)
+GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts)
     : AudioProcessorEditor (&p)
+    , valueTreeState(vts)
     , audioProcessor (p)
     , audioFileDialogButton("Load audio file")
-    , intervalSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
-    , durationSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
-    , panningSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
-    , readposSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
-    , velocitySlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
+   // , intervalSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
+    //, durationSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
+   // , panningSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
+    //, readposSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
+    //, velocitySlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
 
     , intervalRandSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
     , durationRandSlider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::TextBoxBelow)
@@ -47,77 +48,85 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     addAndMakeVisible(activeGrainsLabel);
     startTimerHz(30);
 
+    intervalSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    intervalSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(intervalSlider);
-    intervalSlider.setRange(0.1, 5000);
-    intervalSlider.setSkewFactorFromMidPoint(1);
+    intervalAttachment.reset(new SliderAttachment(valueTreeState, "interval", intervalSlider));
     intervalSlider.onValueChange = [this] {
         audioProcessor.setInterval((float)intervalSlider.getValue());
     };
-    intervalSlider.setValue(1.0);
 
+    durationSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    durationSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(durationSlider);
-    durationSlider.setRange(1, 88200);
+    durationAttachment.reset(new SliderAttachment(valueTreeState, "duration", durationSlider));
     durationSlider.onValueChange = [this] {
         //audioProcessor.setDuration((float)durationSlider.getValue());
     };
-    durationSlider.setValue(44100);
 
+    panningSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    panningSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(panningSlider);
-    panningSlider.setRange(-1, 1);
+    panningAttachment.reset(new SliderAttachment(valueTreeState, "panning", panningSlider));
     panningSlider.onValueChange = [this] {
         audioProcessor.setPanning((float)panningSlider.getValue());
     };
-    panningSlider.setValue(0);
 
+    readposSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    readposSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(readposSlider);
-    readposSlider.setRange(0, 1);
+    readposAttachment.reset(new SliderAttachment(valueTreeState, "readpos", readposSlider));
     readposSlider.onValueChange = [this] {
         audioProcessor.setReadpos((float)readposSlider.getValue());
     };
-    readposSlider.setValue(0);
 
+    velocitySlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    velocitySlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(velocitySlider);
-    velocitySlider.setRange(0.25, 4);
+    velocityAttachment.reset(new SliderAttachment(valueTreeState, "velocity", velocitySlider));
     velocitySlider.onValueChange = [this] {
         audioProcessor.setVelocity((float)velocitySlider.getValue());
     };
-    velocitySlider.setValue(1);
 
+    intervalRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    intervalRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(intervalRandSlider);
-    intervalRandSlider.setRange(0, 1);
+    intervalRandAttachment.reset(new SliderAttachment(valueTreeState, "intervalRand", intervalRandSlider));
     intervalRandSlider.onValueChange = [this] {
         audioProcessor.setIntervalRand((float)intervalRandSlider.getValue());
     };
-    intervalRandSlider.setValue(0.0);
 
+    durationRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    durationRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(durationRandSlider);
-    durationRandSlider.setRange(0, 1);
+    durationRandAttachment.reset(new SliderAttachment(valueTreeState, "durationRand", durationRandSlider));
     durationRandSlider.onValueChange = [this] {
         audioProcessor.setDurationRand((float)durationRandSlider.getValue());
     };
-    durationRandSlider.setValue(0);
 
+    panningRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    panningRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(panningRandSlider);
-    panningRandSlider.setRange(0, 1);
+    panningRandAttachment.reset(new SliderAttachment(valueTreeState, "panningRand", panningRandSlider));
     panningRandSlider.onValueChange = [this] {
         audioProcessor.setPanningRand((float)panningRandSlider.getValue());
     };
-    panningRandSlider.setValue(0);
 
+    readposRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    readposRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(readposRandSlider);
-    readposRandSlider.setRange(0, 1);
+    readposRandAttachment.reset(new SliderAttachment(valueTreeState, "readposRand", readposRandSlider));
     readposRandSlider.onValueChange = [this] {
-        audioProcessor.setReadposRand((float)readposRandSlider.getValue());
+        audioProcessor.setInterval((float)readposRandSlider.getValue());
     };
-    readposRandSlider.setValue(0);
 
+    velocityRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    velocityRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(velocityRandSlider);
-    velocityRandSlider.setRange(0, 1);
-    velocityRandSlider.setSkewFactorFromMidPoint(0.1);
+    velocityRandAttachment.reset(new SliderAttachment(valueTreeState, "velocityRand", velocityRandSlider));
     velocityRandSlider.onValueChange = [this] {
-        audioProcessor.setVelocityRand((float)velocityRandSlider.getValue());
+        audioProcessor.setInterval((float)velocityRandSlider.getValue());
     };
-    velocityRandSlider.setValue(0.0);
 
     addAndMakeVisible(intervalLabel);
     addAndMakeVisible(durationLabel);

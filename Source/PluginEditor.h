@@ -176,7 +176,8 @@ class GrainMotherAudioProcessorEditor  : public juce::AudioProcessorEditor
                                        , public juce::Timer
 {
 public:
-    GrainMotherAudioProcessorEditor (GrainMotherAudioProcessor&);
+    typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
+    GrainMotherAudioProcessorEditor (GrainMotherAudioProcessor&, juce::AudioProcessorValueTreeState&);
     ~GrainMotherAudioProcessorEditor() override;
 
     //==============================================================================
@@ -195,6 +196,8 @@ private:
     // access the processor object that created it.
     GrainMotherAudioProcessor& audioProcessor;
 
+    juce::AudioProcessorValueTreeState& valueTreeState;
+
     juce::TextButton audioFileDialogButton;
 
     juce::Slider intervalSlider;
@@ -203,11 +206,23 @@ private:
     juce::Slider readposSlider;
     juce::Slider velocitySlider;
 
+    std::unique_ptr<SliderAttachment> intervalAttachment;
+    std::unique_ptr<SliderAttachment> durationAttachment;
+    std::unique_ptr<SliderAttachment> panningAttachment;
+    std::unique_ptr<SliderAttachment> readposAttachment;
+    std::unique_ptr<SliderAttachment> velocityAttachment;
+
     juce::Slider intervalRandSlider;
     juce::Slider durationRandSlider;
     juce::Slider panningRandSlider;
     juce::Slider readposRandSlider;
     juce::Slider velocityRandSlider;
+
+    std::unique_ptr<SliderAttachment> intervalRandAttachment;
+    std::unique_ptr<SliderAttachment> durationRandAttachment;
+    std::unique_ptr<SliderAttachment> panningRandAttachment;
+    std::unique_ptr<SliderAttachment> readposRandAttachment;
+    std::unique_ptr<SliderAttachment> velocityRandAttachment;
 
     juce::Label intervalLabel;
     juce::Label durationLabel;
@@ -225,7 +240,7 @@ private:
     AudioformComponent audioformComponent;
 
     GrainVisualizer grainVisualizer;
-
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GrainMotherAudioProcessorEditor)
 };
 

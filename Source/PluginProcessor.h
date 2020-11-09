@@ -76,11 +76,19 @@ private:
 
     juce::AudioSampleBuffer audioFileBuffer;
 
-    juce::AudioParameterFloat* intervalParam;
-    juce::AudioParameterFloat* durationParam;
-    juce::AudioParameterFloat* panningParam;
-    juce::AudioParameterFloat* readposParam;
-    juce::AudioParameterFloat* velocityParam;
+    juce::AudioProcessorValueTreeState parameters;
+
+    std::atomic<float>* intervalParameter = nullptr;
+    std::atomic<float>* durationParameter = nullptr;
+    std::atomic<float>* panningParameter = nullptr;
+    std::atomic<float>* readposParameter = nullptr;
+    std::atomic<float>* velocityParameter = nullptr;
+
+    std::atomic<float>* intervalRandParameter = nullptr;
+    std::atomic<float>* durationRandParameter = nullptr;
+    std::atomic<float>* panningRandParameter = nullptr;
+    std::atomic<float>* readposRandParameter = nullptr;
+    std::atomic<float>* velocityRandParameter = nullptr;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GrainMotherAudioProcessor)
 };

@@ -12,21 +12,80 @@
 //==============================================================================
 GrainMotherAudioProcessor::GrainMotherAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
+     : AudioProcessor ( BusesProperties()
+        #if ! JucePlugin_IsMidiEffect
+        #if ! JucePlugin_IsSynth
+                 .withInput("Input", juce::AudioChannelSet::stereo(), true)
+        #endif
+                 .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+        #endif
+     ) 
+        , parameters(*this, nullptr, juce::Identifier("GrainMother"), 
+        {
+            std::make_unique<juce::AudioParameterFloat>("interval",             // parameterID
+                                                        "Interval",             // parameter name
+                                                        0.5f,                   // minimum value
+                                                        1000.0f,                // maximum value
+                                                        1.0f),                  // default value
+                                                    std::make_unique<juce::AudioParameterFloat>("duration",
+                                                        "Duration",
+                                                        1.0f,
+                                                        88200.0f,
+                                                        44100.0f),
+                                                    std::make_unique<juce::AudioParameterFloat>("panning",
+                                                        "Panning",
+                                                        -1.0f,
+                                                        1.0f, 
+                                                        0.0f), 
+                                                    std::make_unique<juce::AudioParameterFloat>("readpos",
+                                                        "Readpos",
+                                                        0.0f, 
+                                                        1.0f,
+                                                        0.01f),
+                                                    std::make_unique<juce::AudioParameterFloat>("velocity",
+                                                        "Velocity",
+                                                        0.25f,
+                                                        4.0f,
+                                                        1.0f),
+                                                    std::make_unique<juce::AudioParameterFloat>("intervalRand",
+                                                        "IntervalRand",
+                                                        0.0f,
+                                                        1.0f,
+                                                        0.0f),
+                                                    std::make_unique<juce::AudioParameterFloat>("durationRand",
+                                                        "DurationRand",
+                                                        0.0f,
+                                                        1.0f,
+                                                        0.0f),
+                                                    std::make_unique<juce::AudioParameterFloat>("panningRand",
+                                                        "PanningRand",
+                                                        0.0f,
+                                                        1.0f,
+                                                        0.0f),
+                                                    std::make_unique<juce::AudioParameterFloat>("readposRand",
+                                                        "ReadposRand",
+                                                        0.0f,
+                                                        1.0f,
+                                                        0.0f),
+                                                    std::make_unique<juce::AudioParameterFloat>("velocityRand",
+                                                        "VelocityRand",
+                                                        0.0f,
+                                                        1.0f,
+                                                        0.0f),
+        })
 #endif
 {
-    addParameter(intervalParam = new juce::AudioParameterFloat("interval", "Interval", 0.1f, 5000.0f, 1.0f));
-    addParameter(durationParam = new juce::AudioParameterFloat("duration", "Duration", 0.1f, 5000.0f, 1.0f));
+    intervalParameter = parameters.getRawParameterValue("interval");
+    durationParameter = parameters.getRawParameterValue("duration");
+    panningParameter = parameters.getRawParameterValue("panning");
+    readposParameter = parameters.getRawParameterValue("readpos");
+    velocityParameter = parameters.getRawParameterValue("velocity");
+
+    //addParameter(intervalParam = new juce::AudioParameterFloat("interval", "Interval", 0.1f, 5000.0f, 1.0f));
+   /* addParameter(durationParam = new juce::AudioParameterFloat("duration", "Duration", 0.1f, 5000.0f, 1.0f));
     addParameter(panningParam = new juce::AudioParameterFloat("panning", "Panning", 0.1f, 5000.0f, 1.0f));
     addParameter(readposParam = new juce::AudioParameterFloat("readpos", "Readpos", 0.1f, 5000.0f, 1.0f));
-    addParameter(velocityParam = new juce::AudioParameterFloat("velocity", "Velocity", 0.25f, 4.0f, 1.0f));
+    addParameter(velocityParam = new juce::AudioParameterFloat("velocity", "Velocity", 0.25f, 4.0f, 1.0f));*/
 
 }
 
@@ -157,6 +216,7 @@ void GrainMotherAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    //auto interval
 }
 
 void GrainMotherAudioProcessor::releaseResources()
@@ -226,7 +286,7 @@ bool GrainMotherAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* GrainMotherAudioProcessor::createEditor()
 {
-    return new GrainMotherAudioProcessorEditor (*this);
+    return new GrainMotherAudioProcessorEditor (*this, parameters);
 }
 
 //==============================================================================
@@ -235,12 +295,20 @@ void GrainMotherAudioProcessor::getStateInformation (juce::MemoryBlock& destData
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    auto state = parameters.copyState();
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    copyXmlToBinary(*xml, destData);
 }
 
 void GrainMotherAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+    if (xmlState.get() != nullptr)
+        if (xmlState->hasTagName(parameters.state.getType()))
+            parameters.replaceState(juce::ValueTree::fromXml(*xmlState));
 }
 
 //==============================================================================
