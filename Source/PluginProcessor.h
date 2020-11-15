@@ -60,6 +60,7 @@ public:
     void setPanning(float panning);
     void setReadpos(float readpos);
     void setVelocity(float velocity);
+    void setDirection(float direction);
     void setIntervalRand(float interval);
     void setDurationRand(float duration);
     void setPanningRand(float panning);
@@ -83,6 +84,8 @@ private:
     std::atomic<float>* panningParameter = nullptr;
     std::atomic<float>* readposParameter = nullptr;
     std::atomic<float>* velocityParameter = nullptr;
+
+    std::atomic<float>* directionParameter = nullptr;
 
     std::atomic<float>* intervalRandParameter = nullptr;
     std::atomic<float>* durationRandParameter = nullptr;

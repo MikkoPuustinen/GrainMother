@@ -13,13 +13,13 @@
 
 //==============================================================================
 /**
-* 
-* 
-* 
+*
+*
+*
 */
 
 class AudioformComponent : public::juce::Component
-                         , private::juce::ChangeListener
+    , private::juce::ChangeListener
 {
 public:
     AudioformComponent(int sourceSamplesPerThumbnailSample,
@@ -70,6 +70,7 @@ public:
         if (source == &thumbnail)
             thumbnailChanged();
     }
+
 private:
 
     void thumbnailChanged()
@@ -81,8 +82,6 @@ private:
 
     float start;
     float end;
-
-    //float multiplier;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioformComponent)
 
@@ -105,9 +104,8 @@ public:
         audioProcessor.setReadpos(start / getLocalBounds().getWidth() * multiplier);
         repaint();
     }
-    void mouseDrag(const juce::MouseEvent& event) override
+    void setProcessorValues()
     {
-        end = event.position.x;
         auto multiplier = audioProcessor.getMaximumPosition();
         if (start > end) { // dragging from right to left
             audioProcessor.setReadpos(end / getLocalBounds().getWidth() * multiplier);
@@ -115,9 +113,25 @@ public:
         }
         else { // dragging from left to right
             const float dur2 = (end - start) / getLocalBounds().getWidth() * multiplier;
+            const float readpos = start / getLocalBounds().getWidth() * multiplier;
+            audioProcessor.setReadpos(readpos);
             audioProcessor.setDuration(dur2);
         }
-
+    }
+    void mouseDrag(const juce::MouseEvent& event) override
+    {
+        end = event.position.x;
+        //setProcessorValues(start, end);
+        auto multiplier = audioProcessor.getMaximumPosition();
+        if (start > end) { // dragging from right to left
+            audioProcessor.setReadpos(end / getLocalBounds().getWidth() * multiplier);
+            audioProcessor.setDuration((start - end) / getLocalBounds().getWidth() * multiplier);
+        }
+        else { // dragging from left to right
+            const float dur2 = (end - start) / getLocalBounds().getWidth() * multiplier;
+            audioProcessor.setReadpos(start / getLocalBounds().getWidth() * multiplier);
+            audioProcessor.setDuration(dur2);
+        }
         repaint();
     }
     
@@ -141,6 +155,12 @@ public:
         int grainAmount = (int)grains.size() / 2;
         for (auto&& grain : grains) {
             auto& x = grain.get();
+            if (x.direction == 0) {
+                g.setColour(juce::Colour(145, 73, 245));
+            }
+            else {
+                g.setColour(juce::Colour(0, 181, 142));
+            }
             int heightDev;
             if (grainAmount < 1) {
                 heightDev = 0;
@@ -155,6 +175,12 @@ public:
     {
         this->grains = audioProcessor.getGrainPool();
         repaint();
+    }
+    void initialize(float start, float end)
+    {
+        this->start = start * getLocalBounds().getWidth();
+        this->end = end;
+        this->setProcessorValues();
     }
 
 private:
@@ -188,9 +214,6 @@ public:
 
     void timerCallback() override;
 
-    //formatManager.registerBasicFormats();
-
-
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
@@ -205,12 +228,14 @@ private:
     juce::Slider panningSlider;
     juce::Slider readposSlider;
     juce::Slider velocitySlider;
+    juce::Slider directionSlider;
 
     std::unique_ptr<SliderAttachment> intervalAttachment;
     std::unique_ptr<SliderAttachment> durationAttachment;
     std::unique_ptr<SliderAttachment> panningAttachment;
     std::unique_ptr<SliderAttachment> readposAttachment;
     std::unique_ptr<SliderAttachment> velocityAttachment;
+    std::unique_ptr<SliderAttachment> directionAttachment;
 
     juce::Slider intervalRandSlider;
     juce::Slider durationRandSlider;

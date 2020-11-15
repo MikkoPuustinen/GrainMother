@@ -47,6 +47,11 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
                                                         0.25f,
                                                         4.0f,
                                                         1.0f),
+                                                    std::make_unique<juce::AudioParameterFloat>("direction",
+                                                        "Direction",
+                                                        0.0f,
+                                                        1.0f,
+                                                        0.0f),
                                                     std::make_unique<juce::AudioParameterFloat>("intervalRand",
                                                         "IntervalRand",
                                                         0.0f,
@@ -80,13 +85,7 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
     panningParameter = parameters.getRawParameterValue("panning");
     readposParameter = parameters.getRawParameterValue("readpos");
     velocityParameter = parameters.getRawParameterValue("velocity");
-
-    //addParameter(intervalParam = new juce::AudioParameterFloat("interval", "Interval", 0.1f, 5000.0f, 1.0f));
-   /* addParameter(durationParam = new juce::AudioParameterFloat("duration", "Duration", 0.1f, 5000.0f, 1.0f));
-    addParameter(panningParam = new juce::AudioParameterFloat("panning", "Panning", 0.1f, 5000.0f, 1.0f));
-    addParameter(readposParam = new juce::AudioParameterFloat("readpos", "Readpos", 0.1f, 5000.0f, 1.0f));
-    addParameter(velocityParam = new juce::AudioParameterFloat("velocity", "Velocity", 0.25f, 4.0f, 1.0f));*/
-
+    directionParameter = parameters.getRawParameterValue("direction");
 }
 
 GrainMotherAudioProcessor::~GrainMotherAudioProcessor()
@@ -102,7 +101,6 @@ void GrainMotherAudioProcessor::setInterval(float interval)
 
 void GrainMotherAudioProcessor::setDuration(float duration)
 {
-    float dd = duration * this->getSampleRate();
     puroEngine.durationParam.centre = (float)(duration * this->getSampleRate());
 }
 void GrainMotherAudioProcessor::setPanning(float panning)
@@ -116,6 +114,10 @@ void GrainMotherAudioProcessor::setReadpos(float readpos)
 void GrainMotherAudioProcessor::setVelocity(float velocity)
 {
     puroEngine.velocityParam.centre = (float)velocity;
+}
+void GrainMotherAudioProcessor::setDirection(float direction)
+{
+    puroEngine.directionParam.centre = direction;
 }
 void GrainMotherAudioProcessor::setIntervalRand(float deviation)
 {
@@ -309,6 +311,8 @@ void GrainMotherAudioProcessor::setStateInformation (const void* data, int sizeI
     if (xmlState.get() != nullptr)
         if (xmlState->hasTagName(parameters.state.getType()))
             parameters.replaceState(juce::ValueTree::fromXml(*xmlState));
+
+
 }
 
 //==============================================================================

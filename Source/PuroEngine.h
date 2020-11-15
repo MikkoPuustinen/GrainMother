@@ -16,15 +16,16 @@
 /** A grain is a single audio playback instance. */
 struct Grain
 {
-    Grain(int offset, int length, int startIndex, float panning, double velocity, int sourceLength)
+    Grain(int offset, int length, int startIndex, float panning, double velocity, int sourceLength, int direction)
         : alignment({ offset, length })
         , readInc(velocity)
         , readPos(startIndex)
         , envelopeInc(puro::envelope_halfcos_get_increment<float>(length))
         , envelopePos(envelopeInc)
         , panCoeffs(puro::pan_create_stereo(panning))
+        , direction(direction)
     {
-        std::tie(alignment, readPos) = puro::interp_avoid_out_of_bounds_reads<3>(alignment, readPos, readInc, sourceLength);
+        std::tie(alignment, readPos) = puro::interp_avoid_out_of_bounds_reads<3>(alignment, readPos, readInc, sourceLength, direction);
     }
 
     puro::relative_alignment alignment;
@@ -34,6 +35,8 @@ struct Grain
 
     const float envelopeInc;
     float envelopePos;
+
+    int direction;
 
     puro::PanCoeffs<float, 2> panCoeffs;
 };
@@ -63,8 +66,16 @@ bool process_grain(BufferType dst, ElementType& grain, ContextType& context, con
     // audio buffer uses the memory from context.temp, casting it into a buffer with compile-time constant number of channels, and truncating it to needed length
     auto audio = context.temp.template as_buffer<SourceType>().trunc(dst.length()); // clang "feature", requires the keyword "template" with the function call
 
+
+
     // read audio from source, cubic interpolation
-    grain.readPos = puro::interp3_fill(audio, source, grain.readPos, grain.readInc);
+    if (grain.direction == 0) {
+        grain.readPos = puro::interp3_fill(audio, source, grain.readPos, -1 * grain.readInc);
+    }
+    else {
+        grain.readPos = puro::interp3_fill(audio, source, grain.readPos, grain.readInc);
+    }
+    
 
     // truncate temp envelope buffer to fit the length of our audio, and fill
     auto x = audio.length();
@@ -93,6 +104,7 @@ public:
         , panningParam(0.0f, 0.0f, -1.0f, 1.0f)
         , readposParam(44100.0f, 0.0f, 0, 88200)
         , velocityParam(1.0f, 0.0f, 0.25f, 4.0f)
+        , directionParam(0.0f, 1.0f)
         , sourceBuffer(0, 0)
     {
         pool.elements.reserve(4096);
@@ -153,14 +165,25 @@ public:
             timer.interval = puro::math::round(durationParam.centre / interval);
 
             errorif(timer.interval < 0, "Well this is unexpected, timer shouldn't be let to do that");
-
+            int direction = 0;
+            if (directionParam.get() > (float)std::rand() / RAND_MAX)
+            {
+                direction = 1;
+            }
+            const float d = directionParam.get();
             const int duration = durationParam.get();
             const float panning = panningParam.get();
-            const int readpos = readposParam.get();
+            int readpos; // = readposParam.get();
             const float velocity = velocityParam.get();
+            if (direction == 0) {
+                readpos = readposParam.get() + duration;
+            }
+            else {
+                readpos = readposParam.get();
+            }
 
             // push to the pool of grains, get a handle in return
-            auto it = pool.push(Grain(blockSize - n, duration, readpos, panning, velocity, sourceBuffer.length()));
+            auto it = pool.push(Grain(blockSize - n, duration, readpos, panning, velocity, sourceBuffer.length(), direction));
 
             // immediately process the first block for the newly created grain, potentially also already removing it
             // if the pool is full, it rejects the push operation and returns invalid iterator, and the grain doesn't get added
@@ -184,4 +207,5 @@ public:
     puro::Parameter<float, false> panningParam;
     puro::Parameter<int, false> readposParam;
     puro::Parameter<float, true> velocityParam;
+    puro::Parameter<float, true> directionParam;
 };
