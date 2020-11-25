@@ -32,6 +32,8 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     addAndMakeVisible(activeGrainsLabel);
     startTimerHz(30);
 
+    // Sliders
+
     intervalSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     intervalSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(intervalSlider);
@@ -86,6 +88,9 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     velocityRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(velocityRandSlider);
     velocityRandAttachment.reset(new SliderAttachment(valueTreeState, "velocityRand", velocityRandSlider));
+
+
+    // Labels 
 
     addAndMakeVisible(intervalLabel);
     addAndMakeVisible(durationLabel);

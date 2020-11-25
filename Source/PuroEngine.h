@@ -170,12 +170,11 @@ public:
             {
                 direction = 1;
             }
-            const float d = directionParam.get();
             const int duration = durationParam.get();
             const float panning = panningParam.get();
-            int readpos; // = readposParam.get();
+            int readpos;
             const float velocity = velocityParam.get();
-            if (direction == 0) {
+            if (direction == 0) { // 0 = reverse, 1 = normal playback
                 readpos = readposParam.get() + duration;
             }
             else {

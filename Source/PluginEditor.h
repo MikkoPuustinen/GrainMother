@@ -14,7 +14,7 @@
 //==============================================================================
 /**
 *
-*
+* 
 *
 */
 
@@ -87,6 +87,11 @@ private:
 
 };
 
+/**
+*
+* Draws the visualization for the individual grains and handles the mouse events happening on the audioform
+*/
+
 class GrainVisualizer : public juce::Component
                       , public juce::Timer
 {
@@ -121,7 +126,6 @@ public:
     void mouseDrag(const juce::MouseEvent& event) override
     {
         end = event.position.x;
-        //setProcessorValues(start, end);
         auto multiplier = audioProcessor.getMaximumPosition();
         if (start > end) { // dragging from right to left
             audioProcessor.setReadpos(end / getLocalBounds().getWidth() * multiplier);
@@ -153,13 +157,15 @@ public:
         }
         g.setColour(juce::Colour(0,181, 142));
         int grainAmount = (int)grains.size() / 2;
+
+        // iterate over the grains and draw them on the audioform
         for (auto&& grain : grains) {
             auto& x = grain.get();
-            if (x.direction == 0) {
-                g.setColour(juce::Colour(145, 73, 245));
+            if (x.direction == 0) { 
+                g.setColour(juce::Colour(145, 73, 245));  // right to left
             }
             else {
-                g.setColour(juce::Colour(0, 181, 142));
+                g.setColour(juce::Colour(0, 181, 142)); // left to right
             }
             int heightDev;
             if (grainAmount < 1) {
