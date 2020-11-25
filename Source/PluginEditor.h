@@ -38,7 +38,7 @@ public:
         else
             paintIfFileLoaded(g);
     }
-    boolean hasFile()
+    bool hasFile()
     {
         return thumbnail.getNumChannels() == 0;
     }

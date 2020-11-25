@@ -141,6 +141,8 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     velocityLabel.setJustificationType(juce::Justification::centred);
     randomLabel.setJustificationType(juce::Justification::centred);
 
+    juce::File file(audioProcessor.filePath.getValue());
+    audioformComponent.setFile(file);
 
     if (!audioformComponent.hasFile())
     { 

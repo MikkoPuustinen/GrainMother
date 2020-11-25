@@ -77,6 +77,8 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
                                                         0.0f,
                                                         1.0f,
                                                         0.0f),
+                                                        std::make_unique<puro::Parameter<true, false>>()
+
         })
 #endif
 {
@@ -86,6 +88,9 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
     readposParameter = parameters.getRawParameterValue("readpos");
     velocityParameter = parameters.getRawParameterValue("velocity");
     directionParameter = parameters.getRawParameterValue("direction");
+    
+
+    filePath = parameters.state.getPropertyAsValue("AUDIO_FILEPATH", nullptr, true);
 }
 
 GrainMotherAudioProcessor::~GrainMotherAudioProcessor()
@@ -216,9 +221,8 @@ void GrainMotherAudioProcessor::changeProgramName (int index, const juce::String
 //==============================================================================
 void GrainMotherAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    //auto interval
+    juce::File file(filePath.getValue());
+    loadAudioFile(file);
 }
 
 void GrainMotherAudioProcessor::releaseResources()
@@ -254,30 +258,7 @@ bool GrainMotherAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
     puroEngine.processBlock(buffer);
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-   /* for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
-
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }*/
 }
 
 //==============================================================================
@@ -310,9 +291,10 @@ void GrainMotherAudioProcessor::setStateInformation (const void* data, int sizeI
 
     if (xmlState.get() != nullptr)
         if (xmlState->hasTagName(parameters.state.getType()))
+        {
             parameters.replaceState(juce::ValueTree::fromXml(*xmlState));
-
-
+            filePath.referTo(parameters.state.getPropertyAsValue("AUDIO_FILEPATH", nullptr, true));
+        }
 }
 
 //==============================================================================
@@ -325,6 +307,7 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 void GrainMotherAudioProcessor::loadAudioFile(juce::File file)
 {
+    filePath.setValue(file.getFullPathName());
     juce::AudioFormatManager formatManager;
     formatManager.registerBasicFormats();
     std::unique_ptr<juce::AudioFormatReader> reader(formatManager.createReaderFor(file));
@@ -338,7 +321,6 @@ void GrainMotherAudioProcessor::loadAudioFile(juce::File file)
         , audioFileBuffer.getNumSamples()
         , audioFileBuffer.getArrayOfWritePointers());
 
-    //readposSlider.setRange(0, audioFileBuffer.getNumSamples() / getSampleRate());
     puroEngine.durationParam.maximum = audioFileBuffer.getNumSamples();
     puroEngine.readposParam.maximum = audioFileBuffer.getNumSamples();
 }
