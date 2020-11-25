@@ -15,6 +15,7 @@
 /**
 */
 class GrainMotherAudioProcessor : public juce::AudioProcessor
+                                , public juce::AudioProcessorValueTreeState::Listener
     //, public juce::Timer
 {
 public:
@@ -31,6 +32,8 @@ public:
    #endif
 
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
@@ -87,21 +90,11 @@ private:
 
     std::atomic<float>* directionParameter = nullptr;
 
-    
-
     std::atomic<float>* intervalRandParameter = nullptr;
     std::atomic<float>* durationRandParameter = nullptr;
     std::atomic<float>* panningRandParameter = nullptr;
     std::atomic<float>* readposRandParameter = nullptr;
     std::atomic<float>* velocityRandParameter = nullptr;
-
-
-   /* std::atomic<puro::Parameter<float, true>>* intervalParam;
-    std::atomic<puro::Parameter<float, true>>* durationParam;
-    std::atomic<puro::Parameter<float, true>>* panningParam;
-    std::atomic<puro::Parameter<float, true>>* readposParam;
-    std::atomic<puro::Parameter<float, true>>* velocityParam;
-    std::atomic<puro::Parameter<float, true>>* directionParam;*/
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GrainMotherAudioProcessor)

@@ -76,9 +76,7 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
                                                         "VelocityRand",
                                                         0.0f,
                                                         1.0f,
-                                                        0.0f),
-                                                        std::make_unique<puro::Parameter<true, false>>()
-
+                                                        0.0f)
         })
 #endif
 {
@@ -88,13 +86,59 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
     readposParameter = parameters.getRawParameterValue("readpos");
     velocityParameter = parameters.getRawParameterValue("velocity");
     directionParameter = parameters.getRawParameterValue("direction");
-    
+
+    intervalRandParameter = parameters.getRawParameterValue("intervalRand");
+    durationRandParameter = parameters.getRawParameterValue("durationRand");
+    panningRandParameter = parameters.getRawParameterValue("panningRand");
+    readposRandParameter = parameters.getRawParameterValue("readposRand");
+    velocityRandParameter = parameters.getRawParameterValue("velocityRand");
+
+    parameters.addParameterListener("interval", this);
+    parameters.addParameterListener("duration", this);
+    parameters.addParameterListener("panning", this);
+    parameters.addParameterListener("readpos", this);
+    parameters.addParameterListener("velocity", this);
+    parameters.addParameterListener("direction", this);
+
+    parameters.addParameterListener("intervalRand", this);
+    parameters.addParameterListener("durationRand", this);
+    parameters.addParameterListener("panningRand", this);
+    parameters.addParameterListener("readposRand", this);
+    parameters.addParameterListener("velocityRand", this);
 
     filePath = parameters.state.getPropertyAsValue("AUDIO_FILEPATH", nullptr, true);
 }
 
 GrainMotherAudioProcessor::~GrainMotherAudioProcessor()
 {
+}
+
+void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    // TODO: REFACTOR THIS MESS TO SOME KIND OF LISTENER CLASS
+    if (parameterID == "interval") {
+        setInterval(newValue);
+    } else if (parameterID == "duration") {
+        setDuration(newValue);
+    } else if (parameterID == "panning") {
+        setPanning(newValue);
+    } else if (parameterID == "readpos") {
+        setReadpos(newValue);
+    } else if (parameterID == "velocity") {
+        setVelocity(newValue);
+    } else if (parameterID == "direction") {
+        setDirection(newValue);
+    } else if (parameterID == "intervalRand") {
+        setIntervalRand(newValue);
+    } else if (parameterID == "durationRand") {
+        setDurationRand(newValue);
+    } else if (parameterID == "panningRand") {
+        setPanningRand(newValue);
+    } else if (parameterID == "readposRand") {
+        setReadposRand(newValue);
+    } else if (parameterID == "velocityRand") {
+        setVelocityRand(newValue);
+    }
 }
 
 void GrainMotherAudioProcessor::setInterval(float interval)
