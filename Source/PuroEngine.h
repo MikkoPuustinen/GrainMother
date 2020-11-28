@@ -13,6 +13,8 @@
 #include "puro.hpp"
 #include <JuceHeader.h>
 
+#include <cmath>
+
 /** A grain is a single audio playback instance. */
 struct Grain
 {
@@ -52,6 +54,8 @@ struct Context
 
     Context() : temp(MAX_NUM_CHANNELS, MAX_BLOCK_SIZE, context_pool), envelope(MAX_BLOCK_SIZE, context_pool) {}
 };
+
+
 
 /** The actual beef of the processor, this function gets called for every grain in every block
     It receives a buffer dst that the grain should add its signal into.
@@ -115,7 +119,7 @@ public:
      This forces the compiler to compile an optimised version for each n of source channels. This removes potential branch misses down the line,
      since the actual inner loop (process_grain) runs with complete information about the number of channels it is processing.
      */
-    void processBlock(juce::AudioBuffer<float>& writeBuffer)
+    void processBlock(juce::AudioBuffer<float>& writeBuffer, juce::Array<juce::Array<int>> activeNotes)
     {
         // TODO potential bug if number of output channels is not 2
         errorif(writeBuffer.getNumChannels() < 2, "BUG: implement different write buffer sizes");
@@ -125,11 +129,11 @@ public:
         const int numChannels = sourceBuffer.num_channels();
         if (numChannels == 1)
         {
-            processGrains(dstBuffer, sourceBuffer.as_buffer<puro::buffer<1, float>>());
+            processGrains(dstBuffer, sourceBuffer.as_buffer<puro::buffer<1, float>>(), activeNotes);
         }
         else if (numChannels == 2)
         {
-            processGrains(dstBuffer, sourceBuffer.as_buffer<puro::buffer<2, float>>());
+            processGrains(dstBuffer, sourceBuffer.as_buffer<puro::buffer<2, float>>(), activeNotes);
         }
         else if (numChannels != 0)
         {
@@ -142,7 +146,7 @@ public:
     }
 
     template <typename BufferType, typename SourceType>
-    void processGrains(BufferType buffer, SourceType source)
+    void processGrains(BufferType buffer, SourceType source, juce::Array<juce::Array<int>> activeNotes)
     {
         const int blockSize = buffer.length();
 
@@ -160,10 +164,12 @@ public:
         while ((n = timer.advance(n)) > 0)
         {
             // for each tick, reset interval, get new values for the grain, and create grain
-
+            int midiNote = 0;
+            if (activeNotes.size() > 0) {
+                midiNote = activeNotes[0][0] - 60;
+            }
             const float interval = intervalParam.get();
             timer.interval = puro::math::round(durationParam.centre / interval);
-
             errorif(timer.interval < 0, "Well this is unexpected, timer shouldn't be let to do that");
             int direction = 0;
             if (directionParam.get() > (float)std::rand() / RAND_MAX)
@@ -173,7 +179,12 @@ public:
             const int duration = durationParam.get();
             const float panning = panningParam.get();
             int readpos;
-            const float velocity = velocityParam.get();
+            float div = (float)midiNote / 12;
+            float exp = pow(2, div);
+            const float velocity = velocityParam.get() + exp - 1;
+            
+
+
             if (direction == 0) { // 0 = reverse, 1 = normal playback
                 readpos = readposParam.get() + duration;
             }
@@ -194,6 +205,15 @@ public:
                 }
             }
         }
+    }
+
+    void end_grain()
+    {
+        for (auto&& it : pool)
+        {
+             pool.pop(it);
+        }
+        timer.counter = timer.interval;
     }
 
     Context context;

@@ -2,8 +2,8 @@
 
 <JUCERPROJECT id="kq21s7" name="GrainMother" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
-              pluginCharacteristicsValue="pluginIsSynth" pluginVST3Category="Instrument"
-              pluginRTASCategory="0" headerPath="../../puro/src">
+              pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn"
+              pluginVST3Category="Instrument" pluginRTASCategory="0" headerPath="../../puro/src">
   <MAINGROUP id="qIbWlt" name="GrainMother">
     <GROUP id="{96870F54-F785-5812-1F20-6CF3E532D44C}" name="puro">
       <FILE id="fmqwdD" name="aligned_pool.hpp" compile="0" resource="0"

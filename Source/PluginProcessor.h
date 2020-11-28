@@ -82,6 +82,8 @@ private:
 
     juce::AudioProcessorValueTreeState parameters;
 
+    int activeMidiNotes[128] = { 0 };
+
     std::atomic<float>* intervalParameter = nullptr;
     std::atomic<float>* durationParameter = nullptr;
     std::atomic<float>* panningParameter = nullptr;

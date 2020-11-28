@@ -28,15 +28,15 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
                                                         1000.0f,                // maximum value
                                                         1.0f),                  // default value
             std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,  1.0f  , 88200.0f , 44100.0f  ),
-            std::make_unique<juce::AudioParameterFloat>("panning"      ,"Panning"      , -1.0f  , 1.0f     ,     0.0f  ), 
-            std::make_unique<juce::AudioParameterFloat>("readpos"      ,"Readpos"      ,  0.0f  , 1.0f     ,     0.01f ),
-            std::make_unique<juce::AudioParameterFloat>("velocity"     ,"Velocity"     ,  0.25f , 4.0f     ,     1.0f  ),
-            std::make_unique<juce::AudioParameterFloat>("direction"    ,"Direction"    ,  0.0f  , 1.0f     ,     0.0f  ),
-            std::make_unique<juce::AudioParameterFloat>("intervalRand" ,"IntervalRand" ,  0.0f  , 1.0f     ,     0.0f  ),
-            std::make_unique<juce::AudioParameterFloat>("durationRand" ,"DurationRand" ,  0.0f  , 1.0f     ,     0.0f  ),
-            std::make_unique<juce::AudioParameterFloat>("panningRand"  ,"PanningRand"  ,  0.0f  , 1.0f     ,     0.0f  ),
-            std::make_unique<juce::AudioParameterFloat>("readposRand"  ,"ReadposRand"  ,  0.0f  , 1.0f     ,     0.0f  ),
-            std::make_unique<juce::AudioParameterFloat>("velocityRand" ,"VelocityRand" ,  0.0f  , 1.0f     ,     0.0f  )
+            std::make_unique<juce::AudioParameterFloat>("panning"      ,"Panning"      , -1.0f  ,     1.0f ,     0.0f  ), 
+            std::make_unique<juce::AudioParameterFloat>("readpos"      ,"Readpos"      ,  0.0f  ,     1.0f ,     0.01f ),
+            std::make_unique<juce::AudioParameterFloat>("velocity"     ,"Velocity"     ,  0.25f ,     4.0f ,     1.0f  ),
+            std::make_unique<juce::AudioParameterFloat>("direction"    ,"Direction"    ,  0.0f  ,     1.0f ,     0.0f  ),
+            std::make_unique<juce::AudioParameterFloat>("intervalRand" ,"IntervalRand" ,  0.0f  ,     1.0f ,     0.0f  ),
+            std::make_unique<juce::AudioParameterFloat>("durationRand" ,"DurationRand" ,  0.0f  ,     1.0f ,     0.0f  ),
+            std::make_unique<juce::AudioParameterFloat>("panningRand"  ,"PanningRand"  ,  0.0f  ,     1.0f ,     0.0f  ),
+            std::make_unique<juce::AudioParameterFloat>("readposRand"  ,"ReadposRand"  ,  0.0f  ,     1.0f ,     0.0f  ),
+            std::make_unique<juce::AudioParameterFloat>("velocityRand" ,"VelocityRand" ,  0.0f  ,     1.0f ,     0.0f  )
         })
 #endif
 {
@@ -262,7 +262,40 @@ bool GrainMotherAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    puroEngine.processBlock(buffer);
+
+    juce::MidiBuffer::Iterator i(midiMessages);
+    juce::MidiMessage m;
+    int t;
+
+    bool play = false;
+    while (i.getNextEvent(m, t))
+    {
+        if (m.isNoteOn()) {
+            activeMidiNotes[m.getNoteNumber()] = m.getVelocity();
+        }
+        if (m.isNoteOff()) {
+            activeMidiNotes[m.getNoteNumber()] = 0;
+        }
+        if (m.isAllNotesOff()) {
+            for (int i = 0; i < 128; ++i)
+                activeMidiNotes[i] = 0;
+        }
+
+    }
+    juce::Array<juce::Array<int>> activeNotes;
+
+    for (int i = 0; i < 128; i++) {
+        if (activeMidiNotes[i] > 0) {
+            activeNotes.add(juce::Array<int> {i, activeMidiNotes[i] });
+            play = true;
+        }
+    }
+    if (play) {
+        puroEngine.processBlock(buffer, activeNotes);
+    }
+    else {
+        puroEngine.end_grain();
+    }
 }
 
 //==============================================================================
