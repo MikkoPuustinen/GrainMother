@@ -34,8 +34,8 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
 
     // Sliders
 
-    //intervalSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    intervalSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
+    intervalSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    //intervalSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     intervalSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(intervalSlider);
     intervalAttachment.reset(new SliderAttachment(valueTreeState, "interval", intervalSlider));
