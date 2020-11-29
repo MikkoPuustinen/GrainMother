@@ -17,7 +17,7 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     , audioFileDialogButton("Load audio file")
     , thumbnailCache(5)
     , audioformComponent(1024, formatManager, thumbnailCache, p)
-    , grainVisualizer(p)
+    , grainVisualizer(p, vts)
 {
     
     formatManager.registerBasicFormats();

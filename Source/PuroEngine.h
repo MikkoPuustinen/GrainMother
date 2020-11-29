@@ -183,8 +183,6 @@ public:
             float exp = pow(2, div);
             const float velocity = velocityParam.get() + exp - 1;
             
-
-
             if (direction == 0) { // 0 = reverse, 1 = normal playback
                 readpos = readposParam.get() + duration;
             }

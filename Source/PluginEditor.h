@@ -95,20 +95,53 @@ private:
 
 class GrainVisualizer : public juce::Component
                       , public juce::Timer
+                      , public juce::AudioProcessorValueTreeState::Listener
 {
 public:
-    GrainVisualizer(GrainMotherAudioProcessor& p) : audioProcessor(p) 
+    
+    GrainVisualizer(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) : audioProcessor(p) , drag(0), interval(1), state(STATE_DRAG), valueTreeState(vts)
     {
         startTimer(50);
+
+        valueTreeState.addParameterListener("interval", this);
+        valueTreeState.addParameterListener("duration", this);
+        valueTreeState.addParameterListener("readpos", this);
+    }
+    void parameterChanged(const juce::String& parameterID, float newValue) override
+    {
+        if (parameterID == "interval")
+        {
+            interval = newValue / 1000 * getLocalBounds().getHeight();
+        }
+        else if (parameterID == "duration") 
+        {
+            end = start + (newValue * getLocalBounds().getWidth());
+            diff = end - start;
+        }
+        else if (parameterID == "readpos") 
+        {
+            start = newValue / audioProcessor.getMaximumPosition() * getLocalBounds().getWidth();
+            end = start + diff;
+        }
     }
 
     void mouseDown(const juce::MouseEvent& event) override
     {
-        start = event.position.x;
-        auto multiplier = audioProcessor.getMaximumPosition();
-        const float rpos = start / getLocalBounds().getWidth() * multiplier;
-        audioProcessor.setReadpos(start / getLocalBounds().getWidth() * multiplier);
-        repaint();
+        if (std::abs(event.position.x - handleX - 15) < 15 && std::abs(event.position.y - handleY - 15) < 15) {
+            state = STATE_INTERVAL;
+        }
+        else if (!(event.position.x > start && event.position.x < end)) {
+            state = STATE_DRAG;
+            start = event.position.x;
+            end = event.position.x;
+            auto multiplier = audioProcessor.getMaximumPosition();
+            const float rpos = start / getLocalBounds().getWidth() * multiplier;
+            audioProcessor.setReadpos(start / getLocalBounds().getWidth() * multiplier);
+            repaint();
+        }
+        else {
+            state = STATE_MOVE;
+        }
     }
     void setProcessorValues()
     {
@@ -124,18 +157,68 @@ public:
             audioProcessor.setDuration(dur2);
         }
     }
+    void mouseUp(const juce::MouseEvent& event) override
+    {
+        drag = 0;
+        state = STATE_DRAG;
+    }
     void mouseDrag(const juce::MouseEvent& event) override
     {
-        end = event.position.x;
-        auto multiplier = audioProcessor.getMaximumPosition();
-        if (start > end) { // dragging from right to left
-            audioProcessor.setReadpos(end / getLocalBounds().getWidth() * multiplier);
-            audioProcessor.setDuration((start - end) / getLocalBounds().getWidth() * multiplier);
-        }
-        else { // dragging from left to right
-            const float dur2 = (end - start) / getLocalBounds().getWidth() * multiplier;
-            audioProcessor.setReadpos(start / getLocalBounds().getWidth() * multiplier);
-            audioProcessor.setDuration(dur2);
+        switch (state)
+        {
+        case STATE_DRAG:
+            {
+                const float x = event.position.x;
+                if (x < start) {
+                    start = x;
+                }
+                else {
+                    end = x;
+                }
+                auto multiplier = audioProcessor.getMaximumPosition();
+                if (start < 1) {
+                    start = 1;
+                    end = diff;
+                }
+                if (end > getLocalBounds().getWidth()) {
+                    end = getLocalBounds().getWidth();
+                    start = getLocalBounds().getWidth() - diff;
+                }
+                diff = end - start;
+                setProcessorValues();
+                break;
+            }
+        case STATE_MOVE:
+            {
+                if (drag == 0) {
+                    drag = event.position.x;
+                }
+                else {
+                    start += event.position.x - drag;
+                    end += event.position.x - drag;
+
+                    if (start < 1) {
+                        start = 1;
+                        end = diff;
+                    }
+                    if (end > getLocalBounds().getWidth()) {
+                        end = getLocalBounds().getWidth();
+                        start = getLocalBounds().getWidth() - diff;
+                    }
+                    drag = event.position.x;
+                }
+                setProcessorValues();
+                break;
+            }
+        case STATE_INTERVAL:
+            {
+                interval = getLocalBounds().getHeight() - event.position.y;
+                if (interval < 1)                            { interval = 1; }
+                if (interval > getLocalBounds().getHeight()) { interval = getLocalBounds().getHeight(); }
+                const float intervalP = interval / getLocalBounds().getHeight();
+                audioProcessor.setInterval(intervalP * 1000);
+                break;
+            }
         }
         repaint();
     }
@@ -154,6 +237,12 @@ public:
             if (start > 0 && duration > 0) {
                 g.setColour(juce::Colour(150, 255, juce::uint8(248), juce::uint8(128)));
                 g.fillRect((int)start, 0, (int)duration, getLocalBounds().getHeight());
+                g.setColour(juce::Colour(240, 168, juce::uint8(0), juce::uint8(128)));
+                g.fillRect((int)start, getLocalBounds().getHeight() - (int)interval, (int)duration, getLocalBounds().getHeight());
+                handleX = end - duration * 0.5f - 15;
+                handleY = getLocalBounds().getHeight() - (int)interval - 15;
+                g.setColour(juce::Colour(240, 168, juce::uint8(0)));
+                g.fillEllipse(handleX, handleY, 30, 30);
             }
         }
         g.setColour(juce::Colour(0,181, 142));
@@ -188,16 +277,27 @@ public:
         this->start = start * getLocalBounds().getWidth();
         this->end = end;
         this->setProcessorValues();
+        diff = end - start;
     }
 
 private:
     puro::AlignedPool<Grain> grains;
 
     GrainMotherAudioProcessor& audioProcessor;
+    float drag;
 
+    enum state { STATE_DRAG, STATE_MOVE, STATE_INTERVAL } state;
 
+    float diff;
     float start;
     float end;
+
+    float interval;
+
+    juce::AudioProcessorValueTreeState& valueTreeState;
+
+    float handleX;
+    float handleY;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GrainVisualizer)
 };
 

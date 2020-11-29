@@ -1,0 +1,11 @@
+TODO: 
+
+interval skew
+Drag'n'drop
+Samplerate bugi
+UI
+
+DONE:
+
+Maalatun alueen siirtäminen
+Interval audioformiin

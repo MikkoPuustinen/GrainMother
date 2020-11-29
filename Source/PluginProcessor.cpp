@@ -27,7 +27,7 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
                                                         0.5f,                   // minimum value
                                                         1000.0f,                // maximum value
                                                         1.0f),                  // default value
-            std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,  1.0f  , 88200.0f , 44100.0f  ),
+            std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,  0.0f  ,     1.0f ,     0.25f ),
             std::make_unique<juce::AudioParameterFloat>("panning"      ,"Panning"      , -1.0f  ,     1.0f ,     0.0f  ), 
             std::make_unique<juce::AudioParameterFloat>("readpos"      ,"Readpos"      ,  0.0f  ,     1.0f ,     0.01f ),
             std::make_unique<juce::AudioParameterFloat>("velocity"     ,"Velocity"     ,  0.25f ,     4.0f ,     1.0f  ),
