@@ -1,11 +1,14 @@
 TODO: 
 
 interval skew
-Drag'n'drop
 Samplerate bugi
 UI
+envelope
+reunojen liikutus
+grain amount info display
 
 DONE:
 
 Maalatun alueen siirtäminen
 Interval audioformiin
+Drag'n'drop

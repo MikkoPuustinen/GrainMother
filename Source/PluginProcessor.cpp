@@ -24,8 +24,8 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
         {
             std::make_unique<juce::AudioParameterFloat>("interval",             // parameterID
                                                         "Interval",             // parameter name
-                                                        0.5f,                   // minimum value
-                                                        1000.0f,                // maximum value
+                                                        juce::NormalisableRange(0.5f, 1000.0f, 0.5f, 0.3f, false),                   // minimum value
+                                                                     // maximum value
                                                         1.0f),                  // default value
             std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,  0.0f  ,     1.0f ,     0.25f ),
             std::make_unique<juce::AudioParameterFloat>("panning"      ,"Panning"      , -1.0f  ,     1.0f ,     0.0f  ), 
@@ -103,7 +103,7 @@ void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID
 
 void GrainMotherAudioProcessor::setInterval(float interval)
 {
-    puroEngine.intervalParam.centre = interval;
+    puroEngine.intervalParam.centre = parameters.getParameter("interval")->convertFrom0to1(interval);
     const float intervalP = puroEngine.intervalParam.get();
     puroEngine.timer.interval = puro::math::round(puroEngine.durationParam.centre / intervalP);
 }

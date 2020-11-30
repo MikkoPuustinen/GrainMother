@@ -99,7 +99,7 @@ class GrainVisualizer : public juce::Component
 {
 public:
     
-    GrainVisualizer(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) : audioProcessor(p) , drag(0), interval(1), state(STATE_DRAG), valueTreeState(vts)
+    GrainVisualizer(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) : audioProcessor(p) , drag(0), interval(20), state(STATE_DRAG), valueTreeState(vts)
     {
         startTimer(50);
 
@@ -111,7 +111,7 @@ public:
     {
         if (parameterID == "interval")
         {
-            interval = newValue / 1000 * getLocalBounds().getHeight();
+            interval = valueTreeState.getParameter("interval")->convertTo0to1(newValue) * getLocalBounds().getHeight();
         }
         else if (parameterID == "duration") 
         {
@@ -132,6 +132,7 @@ public:
         }
         else if (!(event.position.x > start && event.position.x < end)) {
             state = STATE_DRAG;
+            eventStart = event.position.x;
             start = event.position.x;
             end = event.position.x;
             auto multiplier = audioProcessor.getMaximumPosition();
@@ -169,20 +170,19 @@ public:
         case STATE_DRAG:
             {
                 const float x = event.position.x;
-                if (x < start) {
+                if (x < eventStart) {
                     start = x;
+                    end = eventStart;
                 }
                 else {
                     end = x;
+                    start = eventStart;
                 }
-                auto multiplier = audioProcessor.getMaximumPosition();
                 if (start < 1) {
                     start = 1;
-                    end = diff;
                 }
                 if (end > getLocalBounds().getWidth()) {
                     end = getLocalBounds().getWidth();
-                    start = getLocalBounds().getWidth() - diff;
                 }
                 diff = end - start;
                 setProcessorValues();
@@ -215,8 +215,9 @@ public:
                 interval = getLocalBounds().getHeight() - event.position.y;
                 if (interval < 1)                            { interval = 1; }
                 if (interval > getLocalBounds().getHeight()) { interval = getLocalBounds().getHeight(); }
-                const float intervalP = interval / getLocalBounds().getHeight();
-                audioProcessor.setInterval(intervalP * 1000);
+                const float intervalP = (interval - 20) / getLocalBounds().getHeight();
+                audioProcessor.setInterval(intervalP);
+                
                 break;
             }
         }
@@ -283,6 +284,8 @@ private:
     float diff;
     float start;
     float end;
+
+    float eventStart;
 
     float interval;
 
