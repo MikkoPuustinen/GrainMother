@@ -226,24 +226,16 @@ public:
     void paint(juce::Graphics& g) override
     {
         float duration = 0;
-        if (start > end) {
-            duration = start - end;
-            if (start > 0 && duration > 0) {
-                g.setColour(juce::Colour(150, 255, juce::uint8(248), juce::uint8(128)));
-                g.fillRect((int)end, 0, (int)duration, getLocalBounds().getHeight());
-            }
-        } else {
-            duration = end - start;
-            if (start > 0 && duration > 0) {
-                g.setColour(juce::Colour(150, 255, juce::uint8(248), juce::uint8(128)));
-                g.fillRect((int)start, 0, (int)duration, getLocalBounds().getHeight());
-                g.setColour(juce::Colour(240, 168, juce::uint8(0), juce::uint8(128)));
-                g.fillRect((int)start, getLocalBounds().getHeight() - (int)interval, (int)duration, getLocalBounds().getHeight());
-                handleX = end - duration * 0.5f - 15;
-                handleY = getLocalBounds().getHeight() - (int)interval - 15;
-                g.setColour(juce::Colour(240, 168, juce::uint8(0)));
-                g.fillEllipse(handleX, handleY, 30, 30);
-            }
+        duration = end - start;
+        if (start >= 0 && duration > 0) {
+            g.setColour(juce::Colour(150, 255, juce::uint8(248), juce::uint8(128)));
+            g.fillRect((int)start, 0, (int)duration, getLocalBounds().getHeight());
+            g.setColour(juce::Colour(240, 168, juce::uint8(0), juce::uint8(128)));
+            g.fillRect((int)start, getLocalBounds().getHeight() - (int)interval, (int)duration, getLocalBounds().getHeight());
+            handleX = end - duration * 0.5f - 15;
+            handleY = getLocalBounds().getHeight() - (int)interval - 15;
+            g.setColour(juce::Colour(240, 168, juce::uint8(0)));
+            g.fillEllipse(handleX, handleY, 30, 30);
         }
         g.setColour(juce::Colour(0,181, 142));
         int grainAmount = (int)grains.size() / 2;
@@ -306,7 +298,7 @@ private:
 */
 class GrainMotherAudioProcessorEditor  : public juce::AudioProcessorEditor
                                        , public juce::Button::Listener
-                                       , public juce::Timer
+                                       , public juce::FileDragAndDropTarget
 {
 public:
     typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
@@ -315,16 +307,24 @@ public:
 
     //==============================================================================
     void paint (juce::Graphics&) override;
+    void paintOverChildren(juce::Graphics& g) override;
+
     void resized() override;
 
     void buttonClicked(juce::Button* button) override;
 
-    void timerCallback() override;
+
+    bool isInterestedInFileDrag(const juce::StringArray& files) override;
+    void filesDropped(const juce::StringArray& files, int x, int y) override;
+    void fileDragEnter(const juce::StringArray& files, int x, int y) override;
+    void fileDragExit(const juce::StringArray& files) override;
 
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     GrainMotherAudioProcessor& audioProcessor;
+
+    bool draggingFiles;
 
     juce::AudioProcessorValueTreeState& valueTreeState;
 

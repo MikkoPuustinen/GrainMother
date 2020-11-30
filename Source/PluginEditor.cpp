@@ -18,6 +18,7 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     , thumbnailCache(5)
     , audioformComponent(1024, formatManager, thumbnailCache, p)
     , grainVisualizer(p, vts)
+    , draggingFiles(false)
 {
     
     formatManager.registerBasicFormats();
@@ -30,7 +31,6 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     audioFileDialogButton.addListener(this);
 
     addAndMakeVisible(activeGrainsLabel);
-    startTimerHz(30);
 
     // Sliders
 
@@ -133,7 +133,17 @@ GrainMotherAudioProcessorEditor::~GrainMotherAudioProcessorEditor()
 void GrainMotherAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+}
 
+void GrainMotherAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
+{
+    if (draggingFiles)
+    {
+        g.setColour(juce::Colour(25, 30, juce::uint8(31)));
+        g.fillAll(juce::Colour(47, 55, juce::uint8(56), juce::uint8(200)));
+        g.fillRect(getLocalBounds().getWidth() / 2 - 150, getLocalBounds().getHeight() / 2 - 50, 300, 100);
+        g.fillRect(getLocalBounds().getWidth() / 2 - 50, getLocalBounds().getHeight() / 2 - 150, 100, 300);
+    }
 }
 void GrainMotherAudioProcessorEditor::resized()
 {
@@ -161,8 +171,35 @@ void GrainMotherAudioProcessorEditor::resized()
     audioformComponent.setBounds(thumbnailBounds);
     grainVisualizer.setBounds(thumbnailBounds);
 
-    activeGrainsLabel.setBounds(10, getHeight() - 40, 100, 30);
+}
 
+void GrainMotherAudioProcessorEditor::filesDropped(const juce::StringArray& files, int x, int y) {
+    for (auto& f : files)
+    {
+        DBG(f);
+    }
+    juce::File file(files[0]);
+    audioProcessor.loadAudioFile(file);
+    audioformComponent.setFile(file);
+    draggingFiles = false;
+    repaint();
+}
+
+void GrainMotherAudioProcessorEditor::fileDragEnter(const juce::StringArray& files, int x, int y)
+{
+    draggingFiles = true;
+    repaint();
+}
+
+void GrainMotherAudioProcessorEditor::fileDragExit(const juce::StringArray& files)
+{
+    draggingFiles = false;
+    repaint();
+}
+
+bool GrainMotherAudioProcessorEditor::isInterestedInFileDrag(const juce::StringArray& files)
+{
+    return true;
 }
 
 
@@ -182,12 +219,4 @@ void GrainMotherAudioProcessorEditor::buttonClicked(juce::Button* button)
             grainVisualizer.initialize(readposSlider.getValue(), 200);
         }
     }
-
 }
-
-
-void GrainMotherAudioProcessorEditor::timerCallback()
-{
-    activeGrainsLabel.setText(juce::String(audioProcessor.getGrainNum()), juce::dontSendNotification);
-}
-

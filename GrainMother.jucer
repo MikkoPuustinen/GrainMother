@@ -3,7 +3,8 @@
 <JUCERPROJECT id="kq21s7" name="GrainMother" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
               pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn"
-              pluginVST3Category="Instrument" pluginRTASCategory="0" headerPath="../../puro/src">
+              pluginVST3Category="Instrument" pluginRTASCategory="0" headerPath="../../puro/src"
+              cppLanguageStandard="17">
   <MAINGROUP id="qIbWlt" name="GrainMother">
     <GROUP id="{96870F54-F785-5812-1F20-6CF3E532D44C}" name="puro">
       <FILE id="fmqwdD" name="aligned_pool.hpp" compile="0" resource="0"
@@ -31,6 +32,8 @@
       <FILE id="dV2xT2" name="utility.hpp" compile="0" resource="0" file="puro/src/utility.hpp"/>
     </GROUP>
     <GROUP id="{7D3C0223-817A-9626-D2F9-1C41FFCF1710}" name="Source">
+      <FILE id="dXBxZ5" name="LookAndFeel.cpp" compile="1" resource="0" file="Source/LookAndFeel.cpp"/>
+      <FILE id="NFBEz4" name="LookAndFeel.h" compile="0" resource="0" file="Source/LookAndFeel.h"/>
       <FILE id="khdxXQ" name="PuroEngine.h" compile="0" resource="0" file="Source/PuroEngine.h"/>
       <FILE id="oPHoMW" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
