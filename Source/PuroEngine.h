@@ -18,7 +18,7 @@
 /** A grain is a single audio playback instance. */
 struct Grain
 {
-    Grain(int offset, int length, int startIndex, float panning, double velocity, int sourceLength, int direction)
+    Grain(int offset, int length, int startIndex, float panning, double velocity, int sourceLength, int direction, int midiNote)
         : alignment({ offset, length })
         , readInc(velocity)
         , readPos(startIndex)
@@ -26,6 +26,9 @@ struct Grain
         , envelopePos(envelopeInc)
         , panCoeffs(puro::pan_create_stereo(panning))
         , direction(direction)
+        , note(midiNote)
+        , adsr(0)
+        , length(length)
     {
         std::tie(alignment, readPos) = puro::interp_avoid_out_of_bounds_reads<3>(alignment, readPos, readInc, sourceLength, direction);
     }
@@ -35,10 +38,14 @@ struct Grain
     const double readInc;
     double readPos;
 
-    const float envelopeInc;
+    float envelopeInc;
     float envelopePos;
+    int length;
+    int adsr;
 
     int direction;
+
+    int note;
 
     puro::PanCoeffs<float, 2> panCoeffs;
 };
@@ -55,16 +62,53 @@ struct Context
     Context() : temp(MAX_NUM_CHANNELS, MAX_BLOCK_SIZE, context_pool), envelope(MAX_BLOCK_SIZE, context_pool) {}
 };
 
+template <typename BufferType, typename PositionType>
+PositionType envelope_release(BufferType buffer, PositionType position, const PositionType increment) noexcept
+{
+    auto dst = buffer.channel(0);
+    for (int i = 0; i < buffer.length(); ++i)
+    {
+        const auto sample = std::cos(position);
+        dst[i] = sample;
+        position += increment;
+    }
 
+    for (int ch = 1; ch < buffer.num_channels(); ++ch)
+    {
+        puro::math::copy(buffer.channel(ch), buffer.channel(0), buffer.length());
+    }
+
+    return position;
+}
+
+template <typename BufferType, typename PositionType>
+PositionType envelope_attack(BufferType buffer, PositionType position, const PositionType increment) noexcept
+{
+    auto dst = buffer.channel(0);
+    for (int i = 0; i < buffer.length(); ++i)
+    {
+        const auto sample = std::sin(position);
+        dst[i] = sample;
+        position += increment;
+    }
+
+    for (int ch = 1; ch < buffer.num_channels(); ++ch)
+    {
+        puro::math::copy(buffer.channel(ch), buffer.channel(0), buffer.length());
+    }
+
+    return position;
+}
 
 /** The actual beef of the processor, this function gets called for every grain in every block
     It receives a buffer dst that the grain should add its signal into.
  */
 template <typename BufferType, typename ElementType, typename ContextType, typename SourceType>
-bool process_grain(BufferType dst, ElementType& grain, ContextType& context, const SourceType source)
+bool process_grain(BufferType dst, ElementType& grain, ContextType& context, const SourceType source, bool held)
 {
     // Crop the dst buffer to fit the grain's offset and length, i.e. if the grain starts in the middle of the block, or ends
     // before the end of the block. Update the dst buffer and grain.alignment.
+   
     std::tie(dst, grain.alignment) = puro::alignment_advance_and_crop_buffer(dst, grain.alignment);
 
     // audio buffer uses the memory from context.temp, casting it into a buffer with compile-time constant number of channels, and truncating it to needed length
@@ -82,9 +126,21 @@ bool process_grain(BufferType dst, ElementType& grain, ContextType& context, con
     
 
     // truncate temp envelope buffer to fit the length of our audio, and fill
-    auto x = audio.length();
-    auto envelope = context.envelope.trunc(audio.length());
-    grain.envelopePos = puro::envelope_halfcos_fill(envelope, grain.envelopePos, grain.envelopeInc);
+    auto  envelope = context.envelope.trunc(audio.length());
+    if (held) {
+        grain.envelopePos = puro::envelope_halfcos_fill(envelope, grain.envelopePos, grain.envelopeInc);
+    }
+    else {
+        if (grain.adsr == 0) {
+            grain.adsr = 1;
+            if (grain.length * 0.5f < grain.alignment.remaining) {
+                grain.alignment.remaining = grain.length -  grain.alignment.remaining;
+                grain.envelopePos = puro::math::pi - grain.envelopePos;
+            }
+        }
+        grain.envelopePos = puro::envelope_halfcos_fill(envelope, grain.envelopePos, grain.envelopeInc);
+        //grain.envelopePos = envelope_kill(envelope, grain.envelopePos, grain.envelopeInc);
+    }
 
     puro::multiply(audio, envelope);
 
@@ -153,7 +209,14 @@ public:
         // iterate all grains, adding their output to audio buffer
         for (auto&& it : pool)
         {
-            if (process_grain(buffer, it.get(), context, source))
+            bool held = false;
+            for (int i = 0; i < activeNotes.size(); i++) {
+                if (activeNotes[i][0] - 60 == it.get().note)
+                {
+                    held = true; 
+                }
+            }
+            if (process_grain(buffer, it.get(), context, source, held))
             {
                 pool.pop(it);
             }
@@ -163,45 +226,48 @@ public:
         int n = buffer.length();
         while ((n = timer.advance(n)) > 0)
         {
-            // for each tick, reset interval, get new values for the grain, and create grain
-            int midiNote = 0;
-            if (activeNotes.size() > 0) {
-                midiNote = activeNotes[0][0] - 60;
-            }
-            const float interval = intervalParam.get();
-            timer.interval = puro::math::round(durationParam.centre / interval);
-            errorif(timer.interval < 0, "Well this is unexpected, timer shouldn't be let to do that");
-            int direction = 0;
-            if (directionParam.get() > (float)std::rand() / RAND_MAX)
-            {
-                direction = 1;
-            }
-            const int duration = durationParam.get();
-            const float panning = panningParam.get();
-            int readpos;
-            float div = (float)midiNote / 12;
-            float exp = pow(2, div);
-            const float velocity = velocityParam.get() + exp - 1;
-            
-            if (direction == 0) { // 0 = reverse, 1 = normal playback
-                readpos = readposParam.get() + duration;
-            }
-            else {
-                readpos = readposParam.get();
-            }
-
-            // push to the pool of grains, get a handle in return
-            auto it = pool.push(Grain(blockSize - n, duration, readpos, panning, velocity, sourceBuffer.length(), direction));
-
-            // immediately process the first block for the newly created grain, potentially also already removing it
-            // if the pool is full, it rejects the push operation and returns invalid iterator, and the grain doesn't get added
-            if (it.is_valid())
-            {
-                if (process_grain(buffer, it.get(), context, source))
+            for (int i = 0; i < activeNotes.size(); i++) {
+                // for each tick, reset interval, get new values for the grain, and create grain
+                int midiNote = 0;
+                midiNote = activeNotes[i][0] - 60;
+                const float interval = intervalParam.get();
+                timer.interval = puro::math::round(durationParam.centre / interval);
+                errorif(timer.interval < 0, "Well this is unexpected, timer shouldn't be let to do that");
+                int direction = 0;
+                if (directionParam.get() > (float)std::rand() / RAND_MAX)
                 {
-                    pool.pop(it);
+                    direction = 1;
+                }
+                const int duration = durationParam.get();
+                const float panning = panningParam.get();
+                int readpos;
+                float div = (float)midiNote / 12;
+                float exp = pow(2, div);
+                const float velocity = velocityParam.get() + exp - 1;
+
+                if (direction == 0) { // 0 = reverse, 1 = normal playback
+                    readpos = readposParam.get() + duration;
+                }
+                else {
+                    readpos = readposParam.get();
+                }
+
+                // push to the pool of grains, get a handle in return
+                auto it = pool.push(Grain(blockSize - n, duration, readpos, panning, velocity, sourceBuffer.length(), direction, midiNote));
+
+                // immediately process the first block for the newly created grain, potentially also already removing it
+                // if the pool is full, it rejects the push operation and returns invalid iterator, and the grain doesn't get added
+                if (it.is_valid())
+                {
+                    if (process_grain(buffer, it.get(), context, source, true))
+                    {
+                        pool.pop(it);
+                    }
                 }
             }
+        }
+        if (activeNotes.size() < 1) {
+            timer.counter = timer.interval;
         }
     }
 
@@ -209,7 +275,7 @@ public:
     {
         for (auto&& it : pool)
         {
-             pool.pop(it);
+            it.get().alignment.remaining = 1000;
         }
         timer.counter = timer.interval;
     }

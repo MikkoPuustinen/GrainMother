@@ -1,14 +1,18 @@
 TODO: 
 
-interval skew
 Samplerate bugi
 UI
-envelope
 reunojen liikutus
 grain amount info display
+interval adjustment jumpiness
+
 
 DONE:
 
 Maalatun alueen siirtäminen
+state management (duration, readpos & interval)
 Interval audioformiin
 Drag'n'drop
+interval skew
+polyphonia
+midi end envelope

@@ -116,13 +116,8 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
 
     juce::File file(audioProcessor.filePath.getValue());
     audioformComponent.setFile(file);
-
     if (!audioformComponent.hasFile())
-    { 
-        grainVisualizer.initialize(readposSlider.getValue(), 200);
-    }
-        
-
+        grainVisualizer.initialize();
 }
 
 GrainMotherAudioProcessorEditor::~GrainMotherAudioProcessorEditor()
@@ -169,6 +164,7 @@ void GrainMotherAudioProcessorEditor::resized()
     velocityLabel.setBounds(500, 50, 100, 30);
     juce::Rectangle<int> thumbnailBounds(10, 300, getWidth() - 20, getHeight() - 300);
     audioformComponent.setBounds(thumbnailBounds);
+
     grainVisualizer.setBounds(thumbnailBounds);
 
 }
@@ -216,7 +212,6 @@ void GrainMotherAudioProcessorEditor::buttonClicked(juce::Button* button)
             juce::File file(fileChooser.getResult());
             audioProcessor.loadAudioFile(file);
             audioformComponent.setFile(file);
-            grainVisualizer.initialize(readposSlider.getValue(), 200);
         }
     }
 }

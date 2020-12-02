@@ -24,8 +24,7 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
         {
             std::make_unique<juce::AudioParameterFloat>("interval",             // parameterID
                                                         "Interval",             // parameter name
-                                                        juce::NormalisableRange(0.5f, 1000.0f, 0.5f, 0.3f, false),                   // minimum value
-                                                                     // maximum value
+                                                        juce::NormalisableRange(0.5f, 1000.0f, 0.5f, 0.3f, false),  //range 
                                                         1.0f),                  // default value
             std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,  0.0f  ,     1.0f ,     0.25f ),
             std::make_unique<juce::AudioParameterFloat>("panning"      ,"Panning"      , -1.0f  ,     1.0f ,     0.0f  ), 
@@ -79,6 +78,7 @@ void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID
     if (parameterID == "interval") {
         setInterval(newValue);
     } else if (parameterID == "duration") {
+        DBG(newValue);
         setDuration(newValue);
     } else if (parameterID == "panning") {
         setPanning(newValue);
@@ -103,14 +103,14 @@ void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID
 
 void GrainMotherAudioProcessor::setInterval(float interval)
 {
-    puroEngine.intervalParam.centre = parameters.getParameter("interval")->convertFrom0to1(interval);
+    puroEngine.intervalParam.centre = interval;
     const float intervalP = puroEngine.intervalParam.get();
     puroEngine.timer.interval = puro::math::round(puroEngine.durationParam.centre / intervalP);
 }
 
 void GrainMotherAudioProcessor::setDuration(float duration)
 {
-    puroEngine.durationParam.centre = (float)(duration * this->getSampleRate());
+    puroEngine.durationParam.centre = (float)(duration * getMaximumPosition() * this->getSampleRate());
 }
 void GrainMotherAudioProcessor::setPanning(float panning)
 {
@@ -118,7 +118,7 @@ void GrainMotherAudioProcessor::setPanning(float panning)
 }
 void GrainMotherAudioProcessor::setReadpos(float readpos)
 {
-    puroEngine.readposParam.centre = (float)(readpos * this->getSampleRate());
+    puroEngine.readposParam.centre = (float)(readpos * getMaximumPosition() * this->getSampleRate());
 }
 void GrainMotherAudioProcessor::setVelocity(float velocity)
 {
@@ -280,22 +280,17 @@ void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
             for (int i = 0; i < 128; ++i)
                 activeMidiNotes[i] = 0;
         }
-
     }
     juce::Array<juce::Array<int>> activeNotes;
 
     for (int i = 0; i < 128; i++) {
         if (activeMidiNotes[i] > 0) {
             activeNotes.add(juce::Array<int> {i, activeMidiNotes[i] });
-            play = true;
         }
     }
-    if (play) {
-        puroEngine.processBlock(buffer, activeNotes);
-    }
-    else {
-        puroEngine.end_grain();
-    }
+
+    puroEngine.processBlock(buffer, activeNotes);
+
 }
 
 //==============================================================================
@@ -360,6 +355,8 @@ void GrainMotherAudioProcessor::loadAudioFile(juce::File file)
 
     puroEngine.durationParam.maximum = audioFileBuffer.getNumSamples();
     puroEngine.readposParam.maximum = audioFileBuffer.getNumSamples();
+    setDuration(parameters.getParameter("duration")->getValue());
+    setReadpos(parameters.getParameter("readpos")->getValue());
 }
 
 float GrainMotherAudioProcessor::getMaximumPosition() {

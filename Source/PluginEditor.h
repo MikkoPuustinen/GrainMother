@@ -46,10 +46,6 @@ public:
     void setFile(const juce::File& file)
     {
         thumbnail.setSource(new juce::FileInputSource(file));
-        auto multiplier = audioProcessor.getMaximumPosition();
-        audioProcessor.setReadpos(start / getLocalBounds().getWidth());
-        const float dur2 = (end - start) / getLocalBounds().getWidth();
-        audioProcessor.setDuration(dur2);
     }
     void paintIfNoFileLoaded(juce::Graphics& g)
     {
@@ -99,7 +95,7 @@ class GrainVisualizer : public juce::Component
 {
 public:
     
-    GrainVisualizer(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) : audioProcessor(p) , drag(0), interval(20), state(STATE_DRAG), valueTreeState(vts)
+    GrainVisualizer(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) : audioProcessor(p) , drag(0), state(STATE_DRAG), valueTreeState(vts)
     {
         startTimer(50);
 
@@ -120,7 +116,7 @@ public:
         }
         else if (parameterID == "readpos") 
         {
-            start = newValue / audioProcessor.getMaximumPosition() * getLocalBounds().getWidth();
+            start = newValue * getLocalBounds().getWidth();
             end = start + diff;
         }
     }
@@ -129,39 +125,51 @@ public:
     {
         if (std::abs(event.position.x - handleX - 15) < 15 && std::abs(event.position.y - handleY - 15) < 15) {
             state = STATE_INTERVAL;
+            valueTreeState.getParameter("interval")->beginChangeGesture();
         }
         else if (!(event.position.x > start && event.position.x < end)) {
             state = STATE_DRAG;
+            valueTreeState.getParameter("duration")->beginChangeGesture();
+            valueTreeState.getParameter("readpos")->beginChangeGesture();
             eventStart = event.position.x;
             start = event.position.x;
             end = event.position.x;
-            auto multiplier = audioProcessor.getMaximumPosition();
-            const float rpos = start / getLocalBounds().getWidth() * multiplier;
-            audioProcessor.setReadpos(start / getLocalBounds().getWidth() * multiplier);
-            repaint();
         }
         else {
+            valueTreeState.getParameter("readpos")->beginChangeGesture();
             state = STATE_MOVE;
         }
     }
     void setProcessorValues()
     {
-        auto multiplier = audioProcessor.getMaximumPosition();
-        if (start > end) { // dragging from right to left
-            audioProcessor.setReadpos(end / getLocalBounds().getWidth() * multiplier);
-            audioProcessor.setDuration((start - end) / getLocalBounds().getWidth() * multiplier);
-        }
-        else { // dragging from left to right
-            const float dur2 = (end - start) / getLocalBounds().getWidth() * multiplier;
-            const float readpos = start / getLocalBounds().getWidth() * multiplier;
-            audioProcessor.setReadpos(readpos);
-            audioProcessor.setDuration(dur2);
-        }
+        const float dur2 = (end - start) / getLocalBounds().getWidth();
+        const float readpos = start / getLocalBounds().getWidth();
+        valueTreeState.getParameter("duration")->setValueNotifyingHost(dur2);
+        valueTreeState.getParameter("readpos")->setValueNotifyingHost(readpos);
     }
+
     void mouseUp(const juce::MouseEvent& event) override
     {
+        switch (state)
+        {
+            case STATE_DRAG:
+            {
+                valueTreeState.getParameter("duration")->endChangeGesture();
+                valueTreeState.getParameter("readpos")->endChangeGesture();
+                break;
+            }
+            case STATE_MOVE:
+            {
+                valueTreeState.getParameter("readpos")->endChangeGesture();
+                break;
+            }
+            case STATE_INTERVAL:
+            {
+                valueTreeState.getParameter("interval")->endChangeGesture();
+                break;
+            }
+        }
         drag = 0;
-        state = STATE_DRAG;
     }
     void mouseDrag(const juce::MouseEvent& event) override
     {
@@ -178,8 +186,8 @@ public:
                     end = x;
                     start = eventStart;
                 }
-                if (start < 1) {
-                    start = 1;
+                if (start < 0) {
+                    start = 0;
                 }
                 if (end > getLocalBounds().getWidth()) {
                     end = getLocalBounds().getWidth();
@@ -197,8 +205,8 @@ public:
                     start += event.position.x - drag;
                     end += event.position.x - drag;
 
-                    if (start < 1) {
-                        start = 1;
+                    if (start < 0) {
+                        start = 0;
                         end = diff;
                     }
                     if (end > getLocalBounds().getWidth()) {
@@ -216,12 +224,12 @@ public:
                 if (interval < 1)                            { interval = 1; }
                 if (interval > getLocalBounds().getHeight()) { interval = getLocalBounds().getHeight(); }
                 const float intervalP = (interval - 20) / getLocalBounds().getHeight();
-                audioProcessor.setInterval(intervalP);
                 
+                valueTreeState.getParameter("interval")->setValueNotifyingHost(intervalP);
                 break;
             }
         }
-        repaint();
+        //repaint();
     }
     
     void paint(juce::Graphics& g) override
@@ -265,12 +273,14 @@ public:
         this->grains = audioProcessor.getGrainPool();
         repaint();
     }
-    void initialize(float start, float end)
+    void initialize()
     {
-        this->start = start * getLocalBounds().getWidth();
-        this->end = end;
-        this->setProcessorValues();
+        interval = valueTreeState.getParameter("interval")->getValue() * getLocalBounds().getHeight();
+        start = valueTreeState.getParameter("readpos")->getValue() * getLocalBounds().getWidth();
+        end = start + valueTreeState.getParameter("duration")->getValue() * getLocalBounds().getWidth();
         diff = end - start;
+        setProcessorValues();
+        repaint();
     }
 
 private:

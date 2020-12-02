@@ -16,7 +16,6 @@
 */
 class GrainMotherAudioProcessor : public juce::AudioProcessor
                                 , public juce::AudioProcessorValueTreeState::Listener
-    //, public juce::Timer
 {
 public:
     //==============================================================================
