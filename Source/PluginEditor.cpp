@@ -170,10 +170,7 @@ void GrainMotherAudioProcessorEditor::resized()
 }
 
 void GrainMotherAudioProcessorEditor::filesDropped(const juce::StringArray& files, int x, int y) {
-    for (auto& f : files)
-    {
-        DBG(f);
-    }
+
     juce::File file(files[0]);
     audioProcessor.loadAudioFile(file);
     audioformComponent.setFile(file);

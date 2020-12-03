@@ -78,7 +78,6 @@ void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID
     if (parameterID == "interval") {
         setInterval(newValue);
     } else if (parameterID == "duration") {
-        DBG(newValue);
         setDuration(newValue);
     } else if (parameterID == "panning") {
         setPanning(newValue);
@@ -357,6 +356,7 @@ void GrainMotherAudioProcessor::loadAudioFile(juce::File file)
     puroEngine.readposParam.maximum = audioFileBuffer.getNumSamples();
     setDuration(parameters.getParameter("duration")->getValue());
     setReadpos(parameters.getParameter("readpos")->getValue());
+    setInterval(parameters.getParameter("interval")->getValue());
 }
 
 float GrainMotherAudioProcessor::getMaximumPosition() {
