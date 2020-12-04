@@ -1,7 +1,7 @@
 TODO: 
 
+INITIALIZATION
 Samplerate bugi
-UI
 reunojen liikutus
 grain amount info display
 interval adjustment jumpiness
@@ -10,6 +10,7 @@ interval adjustment jumpiness
 DONE:
 
 Maalatun alueen siirtäminen
+UI
 state management (duration, readpos & interval)
 Interval audioformiin
 Drag'n'drop

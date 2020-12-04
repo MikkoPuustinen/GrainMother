@@ -14,28 +14,28 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     : AudioProcessorEditor (&p)
     , valueTreeState(vts)
     , audioProcessor (p)
-    , audioFileDialogButton("Load audio file")
+    , audioFileDialogButton("loadAudioButton")
     , thumbnailCache(5)
     , audioformComponent(1024, formatManager, thumbnailCache, p)
     , grainVisualizer(p, vts)
     , draggingFiles(false)
 {
-    
+    juce::LookAndFeel::setDefaultLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     formatManager.registerBasicFormats();
     addAndMakeVisible(&audioformComponent);
 
     addAndMakeVisible(&grainVisualizer);
     
-    setSize(800, 650);
-    addAndMakeVisible(audioFileDialogButton);
-    audioFileDialogButton.addListener(this);
-
-    addAndMakeVisible(activeGrainsLabel);
-
+    setSize(1000, 750);
+    
+    addAndMakeVisible(header);
+    header.setText("GrainMother", juce::dontSendNotification);
+    header.setJustificationType(juce::Justification::centred);
+    header.setFont(juce::Font(80.0f));
+    //header.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     // Sliders
 
-    intervalSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    //intervalSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
+    /*intervalSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
     intervalSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(intervalSlider);
     intervalAttachment.reset(new SliderAttachment(valueTreeState, "interval", intervalSlider));
@@ -53,42 +53,47 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     readposSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     readposSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(readposSlider);
-    readposAttachment.reset(new SliderAttachment(valueTreeState, "readpos", readposSlider));
+    readposAttachment.reset(new SliderAttachment(valueTreeState, "readpos", readposSlider));*/
 
     velocitySlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    velocitySlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     velocitySlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(velocitySlider);
     velocityAttachment.reset(new SliderAttachment(valueTreeState, "velocity", velocitySlider));
 
-    directionSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    directionSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
+    directionSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     directionSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(directionSlider);
     directionAttachment.reset(new SliderAttachment(valueTreeState, "direction", directionSlider));
 
-    intervalRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    /*intervalRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     intervalRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(intervalRandSlider);
-    intervalRandAttachment.reset(new SliderAttachment(valueTreeState, "intervalRand", intervalRandSlider));
+    intervalRandAttachment.reset(new SliderAttachment(valueTreeState, "intervalRand", intervalRandSlider));*/
 
-    durationRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    durationRandSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
+    durationRandSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     durationRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(durationRandSlider);
     durationRandAttachment.reset(new SliderAttachment(valueTreeState, "durationRand", durationRandSlider));
 
-    panningRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    panningRandSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
+    panningRandSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     panningRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(panningRandSlider);
     panningRandAttachment.reset(new SliderAttachment(valueTreeState, "panningRand", panningRandSlider));
 
-    readposRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    readposRandSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
+    readposRandSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     readposRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(readposRandSlider);
     readposRandAttachment.reset(new SliderAttachment(valueTreeState, "readposRand", readposRandSlider));
 
-    velocityRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    /*velocityRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     velocityRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
     addAndMakeVisible(velocityRandSlider);
-    velocityRandAttachment.reset(new SliderAttachment(valueTreeState, "velocityRand", velocityRandSlider));
+    velocityRandAttachment.reset(new SliderAttachment(valueTreeState, "velocityRand", velocityRandSlider));*/
 
 
     // Labels 
@@ -118,6 +123,9 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     audioformComponent.setFile(file);
     if (!audioformComponent.hasFile())
         grainVisualizer.initialize();
+
+    addAndMakeVisible(audioFileDialogButton);
+    audioFileDialogButton.addListener(this);
 }
 
 GrainMotherAudioProcessorEditor::~GrainMotherAudioProcessorEditor()
@@ -127,7 +135,31 @@ GrainMotherAudioProcessorEditor::~GrainMotherAudioProcessorEditor()
 //==============================================================================
 void GrainMotherAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    g.fillAll(juce::Colour(246,244,243));
+
+    const int sliderPStartY = getHeight() * 0.5f + 50;
+    auto uiPath = juce::Path();
+    const float curve = 10;
+    //uiPath.startNewSubPath(0, getHeight());
+    uiPath.startNewSubPath(0, getHeight() - 75);
+    uiPath.lineTo(150 - curve, getHeight() - 75);
+    uiPath.quadraticTo(150 + curve * 0.1f, getHeight() - (75 + curve * 0.1f), 150 + curve * 0.5f, getHeight() - (75 + curve));
+    uiPath.lineTo(225, sliderPStartY + curve);
+    uiPath.quadraticTo(225 + (curve * 0.5f), sliderPStartY - (curve * 0.1f), 225 + curve * 1.5f, sliderPStartY);
+    uiPath.lineTo(getWidth() - 225 - curve * 1.5f, sliderPStartY);
+    uiPath.quadraticTo(getWidth() - 225 - (curve * 0.5f), sliderPStartY - (curve * 0.1f), getWidth() - 225, sliderPStartY + curve);
+    uiPath.lineTo(getWidth() - 150 - curve * 0.5f, getHeight() - 75 - curve);
+    uiPath.quadraticTo(getWidth() - 150 + (curve * 0.1f), getHeight() - (75 - curve * 0.1f), getWidth() - 150 + curve, getHeight() - 75);
+    uiPath.lineTo(getWidth(), getHeight() - 75);
+    //uiPath.lineTo(getWidth(), getHeight());
+    //uiPath.closeSubPath();
+
+    auto fillType = juce::FillType();
+    fillType.setColour(juce::Colour(51,51,51));
+    g.setFillType(fillType);
+    //g.fillPath(uiPath);
+    g.setColour(juce::Colour(51, 51, 51));
+    g.strokePath(uiPath, juce::PathStrokeType(5));
 }
 
 void GrainMotherAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
@@ -142,30 +174,54 @@ void GrainMotherAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
 }
 void GrainMotherAudioProcessorEditor::resized()
 {
-    audioFileDialogButton.setBounds({ 10, 10, 200, 30 });
+    header.setBounds(0, 0, getWidth(), 80);
 
-    intervalSlider.setBounds(100, 100, 100, 100);
+    juce::FlexBox sliders;
+    sliders.flexDirection = juce::FlexBox::Direction::row;
+
+    const int slidersW = getWidth() * 0.5f;
+    const int sliderPStartY = getHeight() * 0.5f + 50;
+    juce::Rectangle<int> sliderBounds(getWidth() * 0.25f, sliderPStartY + 50, slidersW, 250);
+    
+    sliders.items.add(juce::FlexItem(directionSlider).withFlex(0, 1, slidersW * 0.25f));
+    sliders.items.add(juce::FlexItem(readposRandSlider).withFlex(0, 1, slidersW * 0.25f));
+    sliders.items.add(juce::FlexItem(panningRandSlider).withFlex(0, 1, slidersW * 0.25f));
+    sliders.items.add(juce::FlexItem(durationRandSlider).withFlex(0, 1, slidersW * 0.25f));
+    
+    sliders.performLayout(sliderBounds);
+
+    juce::FlexBox leftP;
+    juce::Rectangle<int> leftPBounds(75, sliderPStartY, 100, 130);
+    leftP.flexDirection = juce::FlexBox::Direction::row;
+
+    leftP.items.add(juce::FlexItem(velocitySlider).withFlex(0, 1, 100));
+
+    leftP.performLayout(leftPBounds);
+
+    
+
+    /*intervalSlider.setBounds(100, 100, 100, 100);
     durationSlider.setBounds(200, 100, 100, 100);
     panningSlider.setBounds(300, 100, 100, 100);
     readposSlider.setBounds(400, 100, 100, 100);
-    velocitySlider.setBounds(500, 100, 100, 100);
-    directionSlider.setBounds(600, 100, 100, 100);
+    
 
     intervalRandSlider.setBounds(100, 200, 100, 100);
-    durationRandSlider.setBounds(200, 200, 100, 100);
-    panningRandSlider.setBounds(300, 200, 100, 100);
-    readposRandSlider.setBounds(400, 200, 100, 100);
+    
     velocityRandSlider.setBounds(500, 200, 100, 100);
 
     intervalLabel.setBounds(100, 50, 100, 30);
     durationLabel.setBounds(200, 50, 100, 30);
     panningLabel.setBounds(300, 50, 100, 30);
     readposLabel.setBounds(400, 50, 100, 30);
-    velocityLabel.setBounds(500, 50, 100, 30);
-    juce::Rectangle<int> thumbnailBounds(10, 300, getWidth() - 20, getHeight() - 300);
+    velocityLabel.setBounds(500, 50, 100, 30);*/
+
+    juce::Rectangle<int> thumbnailBounds(50, 80, getWidth() - 100, 300);
     audioformComponent.setBounds(thumbnailBounds);
 
     grainVisualizer.setBounds(thumbnailBounds);
+
+    audioFileDialogButton.setBounds({ getWidth() - 90, thumbnailBounds.getY(), 50, 50 });
 
 }
 

@@ -4,8 +4,12 @@
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
               pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn"
               pluginVST3Category="Instrument" pluginRTASCategory="0" headerPath="../../puro/src"
-              cppLanguageStandard="17">
+              cppLanguageStandard="17" pluginManufacturer="Granular Systems Oy Ab Ltd.">
   <MAINGROUP id="qIbWlt" name="GrainMother">
+    <GROUP id="{214482A0-FFFA-BBDD-1CDC-9CC0A9FE8F03}" name="assets">
+      <FILE id="gpxc8t" name="Comfortaa-Light.ttf" compile="0" resource="1"
+            file="assets/Comfortaa-Light.ttf"/>
+    </GROUP>
     <GROUP id="{96870F54-F785-5812-1F20-6CF3E532D44C}" name="puro">
       <FILE id="fmqwdD" name="aligned_pool.hpp" compile="0" resource="0"
             file="puro/src/aligned_pool.hpp"/>

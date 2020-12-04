@@ -49,17 +49,17 @@ public:
     }
     void paintIfNoFileLoaded(juce::Graphics& g)
     {
-        g.fillAll(juce::Colours::white);
+        g.fillAll(juce::Colour(246, 244, 243));
         g.setColour(juce::Colours::darkgrey);
         g.drawFittedText("No File Loaded", getLocalBounds(), juce::Justification::centred, 1);
     }
 
     void paintIfFileLoaded(juce::Graphics& g)
     {
-        g.fillAll(juce::Colours::white);
-        g.setColour(juce::Colour(0,102,102));
+        g.fillAll(juce::Colour(246, 244, 243));
+        g.setColour(juce::Colour(255, 105, 120));
         thumbnail.drawChannels(g, getLocalBounds(), 0.0, thumbnail.getTotalLength(), 1.0f);
-        g.setColour(juce::Colour(17, 173, 173));
+        g.setColour(juce::Colour(230, 57, 70));
         thumbnail.drawChannels(g, getLocalBounds(), 0.0, thumbnail.getTotalLength(), 0.55f);        
     }
     void changeListenerCallback(juce::ChangeBroadcaster* source) override
@@ -123,7 +123,7 @@ public:
 
     void mouseDown(const juce::MouseEvent& event) override
     {
-        if (std::abs(event.position.x - handleX - 15) < 15 && std::abs(event.position.y - handleY - 15) < 15) {
+        if (std::abs(event.position.x - handleX) < 15 && std::abs(event.position.y - handleY) < 15) {
             state = STATE_INTERVAL;
             valueTreeState.getParameter("interval")->beginChangeGesture();
         }
@@ -192,6 +192,9 @@ public:
                 if (end > getLocalBounds().getWidth()) {
                     end = getLocalBounds().getWidth();
                 }
+                if (start == end)
+                    end++;
+
                 diff = end - start;
                 setProcessorValues();
                 break;
@@ -220,12 +223,17 @@ public:
             }
         case STATE_INTERVAL:
             {
-                interval = getLocalBounds().getHeight() - event.position.y;
-                if (interval < 1)                            { interval = 1; }
-                if (interval > getLocalBounds().getHeight()) { interval = getLocalBounds().getHeight(); }
-                const float intervalP = (interval - 20) / getLocalBounds().getHeight();
-                
-                valueTreeState.getParameter("interval")->setValueNotifyingHost(intervalP);
+                if (drag == 0) {
+                    drag = event.position.y;
+                }
+                else {
+                    interval -= event.position.y  - drag;
+                    if (interval < 1)                            { interval = 1; }
+                    if (interval > getLocalBounds().getHeight()) { interval = getLocalBounds().getHeight(); }
+                    const float intervalP = (interval) / getLocalBounds().getHeight();
+                    valueTreeState.getParameter("interval")->setValueNotifyingHost(intervalP);
+                    drag = event.position.y;
+                }
                 break;
             }
         }
@@ -236,15 +244,20 @@ public:
     {
         float duration = 0;
         duration = end - start;
-        if (start >= 0 && duration > 0) {
-            g.setColour(juce::Colour(150, 255, juce::uint8(248), juce::uint8(128)));
-            g.fillRect((int)start, 0, (int)duration, getLocalBounds().getHeight());
-            g.setColour(juce::Colour(240, 168, juce::uint8(0), juce::uint8(128)));
-            g.fillRect((int)start, getLocalBounds().getHeight() - (int)interval, (int)duration, getLocalBounds().getHeight());
-            handleX = end - duration * 0.5f - 15;
-            handleY = getLocalBounds().getHeight() - (int)interval - 15;
-            g.setColour(juce::Colour(240, 168, juce::uint8(0)));
-            g.fillEllipse(handleX, handleY, 30, 30);
+        if (start >= 0 && duration != 0) {
+            g.setColour(juce::Colour(255, 105, juce::uint8(128), juce::uint8(128)));
+            g.fillRect((int)start, getLocalBounds().getHeight() - (int)interval + 2, (int)duration, getLocalBounds().getHeight());
+            g.setColour(juce::Colour(51, 51, juce::uint8(51)));
+            g.fillRoundedRectangle((int)start - 2, 0, 4, getLocalBounds().getHeight(), 1.5f);
+            g.fillRoundedRectangle((int)end   - 2, 0, 4, getLocalBounds().getHeight(), 1.5f);
+            handleX = end - duration * 0.5f;
+            handleY = getLocalBounds().getHeight() - interval;
+            g.setColour(juce::Colour(51, 51, juce::uint8(51), juce::uint8(128)));
+            g.fillRect((int)start, getLocalBounds().getHeight() - (int)interval - 2, (int)duration, 4);
+            g.setColour(juce::Colour(51, 51, 51));
+            juce::Point<float> handleP(handleX, handleY);
+            juce::Rectangle<float> handle(0, 0, 50, 10);
+            g.fillRoundedRectangle(handle.withCentre(handleP), 3.0f);
         }
         g.setColour(juce::Colour(0,181, 142));
         int grainAmount = (int)grains.size() / 2;
@@ -253,10 +266,10 @@ public:
         for (auto&& grain : grains) {
             auto& x = grain.get();
             if (x.direction == 0) { 
-                g.setColour(juce::Colour(145, 73, 245));  // right to left
+                g.setColour(juce::Colour(102, 153, 204));  // right to left
             }
             else {
-                g.setColour(juce::Colour(0, 181, 142)); // left to right
+                g.setColour(juce::Colour(108, 105, 141)); // left to right
             }
             int heightDev;
             if (grainAmount < 1) {
@@ -369,6 +382,7 @@ private:
     std::unique_ptr<SliderAttachment> readposRandAttachment;
     std::unique_ptr<SliderAttachment> velocityRandAttachment;
 
+
     juce::Label intervalLabel;
     juce::Label durationLabel;
     juce::Label panningLabel;
@@ -376,7 +390,7 @@ private:
     juce::Label velocityLabel;
     juce::Label randomLabel;
 
-    juce::Label activeGrainsLabel;
+    juce::Label header;
 
     juce::AudioFormatManager formatManager;
 

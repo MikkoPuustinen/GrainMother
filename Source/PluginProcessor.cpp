@@ -266,7 +266,6 @@ void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     juce::MidiMessage m;
     int t;
 
-    bool play = false;
     while (i.getNextEvent(m, t))
     {
         if (m.isNoteOn()) {
