@@ -14,10 +14,9 @@ GrainMotherSliderLookAndFeel::GrainMotherSliderLookAndFeel()
     setColour(juce::Slider::textBoxTextColourId, juce::Colour(51, 51, 51));
     setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(246, 244, 243));
     setColour(juce::Slider::textBoxHighlightColourId, juce::Colour(246, 244, 243));
-
     setColour(juce::Label::textColourId, juce::Colour(51, 51, 51));
     setColour(juce::TextButton::buttonColourId, juce::Colour(51, 51, 51));
-    setColour(juce::TextButton::buttonOnColourId, juce::Colour(88, 88, 88));
+    setColour(juce::TextButton::buttonOnColourId, juce::Colour(230, 57, 70));
 
 }
 
@@ -152,6 +151,10 @@ Label* GrainMotherSliderLookAndFeel::createSliderTextBox(Slider& slider)
 {
     auto* l = LookAndFeel_V4::createSliderTextBox(slider);
     l->setColour(TextEditor::focusedOutlineColourId, slider.findColour(Slider::textBoxOutlineColourId));
+    l->setColour(TextEditor::highlightedTextColourId, slider.findColour(Slider::textBoxTextColourId));
+    l->setColour(TextEditor::highlightColourId, slider.findColour(Slider::backgroundColourId));
+    l->setColour(TextEditor::textColourId, slider.findColour(Slider::textBoxTextColourId));
+    l->setColour(Label::textWhenEditingColourId, slider.findColour(Slider::textBoxTextColourId));
     l->setFont(24.0f);
     return l;
 }
@@ -164,10 +167,8 @@ void GrainMotherSliderLookAndFeel::drawButtonBackground(juce::Graphics& g, juce:
     g.setColour(bColor);
     Point<float> centre(bounds.getWidth() * 0.5f, bounds.getHeight() * 0.5f);
     Rectangle<float> h(centre.getX(), centre.getY(), bounds.getWidth() * 0.5f, 5.0f);
-    //h.withCentre(centre);
     g.fillRoundedRectangle(h.withCentre(centre), 2.0f);
     Rectangle<float> v(centre.getX(), centre.getY(), 5.0f, bounds.getWidth() * 0.5f);
-    //v.withCentre(Point<float>(bounds.getWidth() * 0.5f, bounds.getHeight() * 0.5f));
     g.fillRoundedRectangle(v.withCentre(centre), 2.0f);
 }
 

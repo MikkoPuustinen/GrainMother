@@ -28,14 +28,15 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
                                                         1.0f),                  // default value
             std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,  0.0f  ,     1.0f ,     0.25f ),
             std::make_unique<juce::AudioParameterFloat>("panning"      ,"Panning"      , -1.0f  ,     1.0f ,     0.0f  ), 
-            std::make_unique<juce::AudioParameterFloat>("readpos"      ,"Readpos"      ,  0.0f  ,     1.0f ,     0.01f ),
+            std::make_unique<juce::AudioParameterFloat>("readpos"      ,"Readpos"      ,  0.0f  ,     1.0f ,     0.25f ),
             std::make_unique<juce::AudioParameterFloat>("velocity"     ,"Velocity"     ,  0.25f ,     4.0f ,     1.0f  ),
-            std::make_unique<juce::AudioParameterFloat>("direction"    ,"Direction"    ,  0.0f  ,     1.0f ,     0.0f  ),
+            std::make_unique<juce::AudioParameterFloat>("direction"    ,"Direction"    ,  0.0f  ,     1.0f ,     1.0f  ),
             std::make_unique<juce::AudioParameterFloat>("intervalRand" ,"IntervalRand" ,  0.0f  ,     1.0f ,     0.0f  ),
             std::make_unique<juce::AudioParameterFloat>("durationRand" ,"DurationRand" ,  0.0f  ,     1.0f ,     0.0f  ),
             std::make_unique<juce::AudioParameterFloat>("panningRand"  ,"PanningRand"  ,  0.0f  ,     1.0f ,     0.0f  ),
-            std::make_unique<juce::AudioParameterFloat>("readposRand"  ,"ReadposRand"  ,  0.0f  ,     1.0f ,     0.0f  ),
-            std::make_unique<juce::AudioParameterFloat>("velocityRand" ,"VelocityRand" ,  0.0f  ,     1.0f ,     0.0f  )
+            std::make_unique<juce::AudioParameterFloat>("readposRand"  ,"ReadposRand"  ,  0.0f  ,     1.0f ,     0.5f  ),
+            std::make_unique<juce::AudioParameterFloat>("velocityRand" ,"VelocityRand" ,  0.0f  ,     1.0f ,     0.0f  ),
+            std::make_unique<juce::AudioParameterFloat>("volume"       ,"Volume"       ,  0.0f  ,     1.0f ,     0.5f  )
         })
 #endif
 {
@@ -46,11 +47,14 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
     velocityParameter = parameters.getRawParameterValue("velocity");
     directionParameter = parameters.getRawParameterValue("direction");
 
+
     intervalRandParameter = parameters.getRawParameterValue("intervalRand");
     durationRandParameter = parameters.getRawParameterValue("durationRand");
     panningRandParameter = parameters.getRawParameterValue("panningRand");
     readposRandParameter = parameters.getRawParameterValue("readposRand");
     velocityRandParameter = parameters.getRawParameterValue("velocityRand");
+
+    masterVolumeParameter = parameters.getRawParameterValue("volume");
 
     parameters.addParameterListener("interval", this);
     parameters.addParameterListener("duration", this);
@@ -70,6 +74,18 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
 
 GrainMotherAudioProcessor::~GrainMotherAudioProcessor()
 {
+    parameters.removeParameterListener("interval", this);
+    parameters.removeParameterListener("duration", this);
+    parameters.removeParameterListener("panning", this);
+    parameters.removeParameterListener("readpos", this);
+    parameters.removeParameterListener("velocity", this);
+    parameters.removeParameterListener("direction", this);
+
+    parameters.removeParameterListener("intervalRand", this);
+    parameters.removeParameterListener("durationRand", this);
+    parameters.removeParameterListener("panningRand", this);
+    parameters.removeParameterListener("readposRand", this);
+    parameters.removeParameterListener("velocityRand", this);
 }
 
 void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
@@ -102,6 +118,7 @@ void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID
 
 void GrainMotherAudioProcessor::setInterval(float interval)
 {
+    
     puroEngine.intervalParam.centre = interval;
     const float intervalP = puroEngine.intervalParam.get();
     puroEngine.timer.interval = puro::math::round(puroEngine.durationParam.centre / intervalP);
@@ -109,6 +126,11 @@ void GrainMotherAudioProcessor::setInterval(float interval)
 
 void GrainMotherAudioProcessor::setDuration(float duration)
 {
+    if (duration <= 0.0f)
+    {
+        duration = 0.01f;
+    }
+
     puroEngine.durationParam.centre = (float)(duration * getMaximumPosition() * this->getSampleRate());
 }
 void GrainMotherAudioProcessor::setPanning(float panning)
@@ -226,6 +248,14 @@ void GrainMotherAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 {
     juce::File file(filePath.getValue());
     loadAudioFile(file);
+
+    previousGain = *masterVolumeParameter;
+
+    setDirection(parameters.getParameter("direction")->getValue());
+    //const float getV = parameters.getParameter("interval")->getValue();
+    //parameters.getParameter("interval")->setValueNotifyingHost(0.09f);
+    setReadposRand(parameters.getParameter("readposRand")->getValue());
+    setPanningRand(parameters.getParameter("panningRand")->getValue());
 }
 
 void GrainMotherAudioProcessor::releaseResources()
@@ -289,6 +319,16 @@ void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     puroEngine.processBlock(buffer, activeNotes);
 
+    auto output = (float)*masterVolumeParameter;
+    if (output == previousGain)
+    {
+        buffer.applyGain(output);
+    }
+    else
+    {
+        buffer.applyGainRamp(0, buffer.getNumSamples(), previousGain, output);
+        previousGain = output;
+    }
 }
 
 //==============================================================================
@@ -355,7 +395,9 @@ void GrainMotherAudioProcessor::loadAudioFile(juce::File file)
     puroEngine.readposParam.maximum = audioFileBuffer.getNumSamples();
     setDuration(parameters.getParameter("duration")->getValue());
     setReadpos(parameters.getParameter("readpos")->getValue());
-    setInterval(parameters.getParameter("interval")->getValue());
+    const float intervalP = puroEngine.intervalParam.get();
+    puroEngine.timer.interval = puro::math::round(puroEngine.durationParam.centre / intervalP);
+   // setInterval(parameters.getParameter("interval")->getValue());
 }
 
 float GrainMotherAudioProcessor::getMaximumPosition() {

@@ -103,6 +103,13 @@ public:
         valueTreeState.addParameterListener("duration", this);
         valueTreeState.addParameterListener("readpos", this);
     }
+
+    ~GrainVisualizer()
+    {
+        valueTreeState.removeParameterListener("interval", this);
+        valueTreeState.removeParameterListener("duration", this);
+        valueTreeState.removeParameterListener("readpos", this);
+    }
     void parameterChanged(const juce::String& parameterID, float newValue) override
     {
         if (parameterID == "interval")
@@ -142,8 +149,11 @@ public:
     }
     void setProcessorValues()
     {
-        const float dur2 = (end - start) / getLocalBounds().getWidth();
+        float dur2 = (end - start) / getLocalBounds().getWidth();
         const float readpos = start / getLocalBounds().getWidth();
+        if (dur2 <= 0)
+            dur2 = 0.01;
+
         valueTreeState.getParameter("duration")->setValueNotifyingHost(dur2);
         valueTreeState.getParameter("readpos")->setValueNotifyingHost(readpos);
     }
@@ -288,6 +298,8 @@ public:
     }
     void initialize()
     {
+        auto range = valueTreeState.getParameter("interval")->getNormalisableRange();
+        
         interval = valueTreeState.getParameter("interval")->getValue() * getLocalBounds().getHeight();
         start = valueTreeState.getParameter("readpos")->getValue() * getLocalBounds().getWidth();
         end = start + valueTreeState.getParameter("duration")->getValue() * getLocalBounds().getWidth();
@@ -363,6 +375,9 @@ private:
     juce::Slider velocitySlider;
     juce::Slider directionSlider;
 
+    juce::Slider outputSlider;
+    std::unique_ptr<SliderAttachment> outputAttachment;
+
     std::unique_ptr<SliderAttachment> intervalAttachment;
     std::unique_ptr<SliderAttachment> durationAttachment;
     std::unique_ptr<SliderAttachment> panningAttachment;
@@ -383,12 +398,11 @@ private:
     std::unique_ptr<SliderAttachment> velocityRandAttachment;
 
 
-    juce::Label intervalLabel;
-    juce::Label durationLabel;
-    juce::Label panningLabel;
-    juce::Label readposLabel;
-    juce::Label velocityLabel;
-    juce::Label randomLabel;
+    juce::Label tuneLabel;
+    juce::Label directionLabel;
+    juce::Label randomPanningLabel;
+    juce::Label randomReadposLabel;
+    juce::Label outputLabel;
 
     juce::Label header;
 

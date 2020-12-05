@@ -56,14 +56,13 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     readposAttachment.reset(new SliderAttachment(valueTreeState, "readpos", readposSlider));*/
 
     velocitySlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    velocitySlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
-    velocitySlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
+    velocitySlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
     addAndMakeVisible(velocitySlider);
     velocityAttachment.reset(new SliderAttachment(valueTreeState, "velocity", velocitySlider));
 
     directionSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
     directionSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
-    directionSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
+    directionSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
     addAndMakeVisible(directionSlider);
     directionAttachment.reset(new SliderAttachment(valueTreeState, "direction", directionSlider));
 
@@ -72,21 +71,21 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     addAndMakeVisible(intervalRandSlider);
     intervalRandAttachment.reset(new SliderAttachment(valueTreeState, "intervalRand", intervalRandSlider));*/
 
-    durationRandSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
-    durationRandSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
-    durationRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
-    addAndMakeVisible(durationRandSlider);
-    durationRandAttachment.reset(new SliderAttachment(valueTreeState, "durationRand", durationRandSlider));
+    outputSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
+    outputSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
+    outputSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
+    addAndMakeVisible(outputSlider);
+    outputAttachment.reset(new SliderAttachment(valueTreeState, "volume", outputSlider));
 
     panningRandSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
     panningRandSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
-    panningRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
+    panningRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
     addAndMakeVisible(panningRandSlider);
     panningRandAttachment.reset(new SliderAttachment(valueTreeState, "panningRand", panningRandSlider));
 
     readposRandSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
     readposRandSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
-    readposRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
+    readposRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
     addAndMakeVisible(readposRandSlider);
     readposRandAttachment.reset(new SliderAttachment(valueTreeState, "readposRand", readposRandSlider));
 
@@ -97,27 +96,29 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
 
 
     // Labels 
+    tuneLabel.setText("tune", juce::dontSendNotification);
 
-    addAndMakeVisible(intervalLabel);
-    addAndMakeVisible(durationLabel);
-    addAndMakeVisible(panningLabel);
-    addAndMakeVisible(readposLabel);
-    addAndMakeVisible(velocityLabel);
-    addAndMakeVisible(randomLabel);
+    outputLabel.setText("output", juce::dontSendNotification);
+    randomPanningLabel.setText("width", juce::dontSendNotification);
+    randomReadposLabel.setText("scatter", juce::dontSendNotification);
+    directionLabel.setText("direction", juce::dontSendNotification);
 
-    intervalLabel.setText("interval", juce::dontSendNotification);
-    durationLabel.setText("duration", juce::dontSendNotification);
-    panningLabel.setText("panning", juce::dontSendNotification);
-    readposLabel.setText("readpos", juce::dontSendNotification);
-    velocityLabel.setText("velocity", juce::dontSendNotification);
-    randomLabel.setText("random", juce::dontSendNotification);
+    tuneLabel.setJustificationType(juce::Justification::centred);
+    outputLabel.setJustificationType(juce::Justification::centred);
+    randomPanningLabel.setJustificationType(juce::Justification::centred);
+    randomReadposLabel.setJustificationType(juce::Justification::centred);
+    directionLabel.setJustificationType(juce::Justification::centred);
+    outputLabel.setFont(22.0f);
+    randomPanningLabel.setFont(22.0f);
+    randomReadposLabel.setFont(22.0f);
+    directionLabel.setFont(22.0f);
+    tuneLabel.setFont(22.0f);
 
-    intervalLabel.setJustificationType(juce::Justification::centred);
-    durationLabel.setJustificationType(juce::Justification::centred);
-    panningLabel.setJustificationType(juce::Justification::centred);
-    readposLabel.setJustificationType(juce::Justification::centred);
-    velocityLabel.setJustificationType(juce::Justification::centred);
-    randomLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(outputLabel);
+    addAndMakeVisible(randomPanningLabel);
+    addAndMakeVisible(randomReadposLabel);
+    addAndMakeVisible(directionLabel);
+    addAndMakeVisible(tuneLabel);
 
     juce::File file(audioProcessor.filePath.getValue());
     audioformComponent.setFile(file);
@@ -186,12 +187,27 @@ void GrainMotherAudioProcessorEditor::resized()
     sliders.items.add(juce::FlexItem(directionSlider).withFlex(0, 1, slidersW * 0.25f));
     sliders.items.add(juce::FlexItem(readposRandSlider).withFlex(0, 1, slidersW * 0.25f));
     sliders.items.add(juce::FlexItem(panningRandSlider).withFlex(0, 1, slidersW * 0.25f));
-    sliders.items.add(juce::FlexItem(durationRandSlider).withFlex(0, 1, slidersW * 0.25f));
+    sliders.items.add(juce::FlexItem(outputSlider).withFlex(0, 1, slidersW * 0.25f));
     
     sliders.performLayout(sliderBounds);
 
+    juce::FlexBox labels;
+    labels.flexDirection = juce::FlexBox::Direction::row;
+
+    juce::Rectangle<int> sliderLabelBounds(getWidth() * 0.25f, sliderPStartY +10, slidersW, 40);
+
+    labels.items.add(juce::FlexItem(directionLabel).withFlex(0, 1, slidersW * 0.25f));
+    labels.items.add(juce::FlexItem(randomReadposLabel).withFlex(0, 1, slidersW * 0.25f));
+    labels.items.add(juce::FlexItem(randomPanningLabel).withFlex(0, 1, slidersW * 0.25f));
+    labels.items.add(juce::FlexItem(outputLabel).withFlex(0, 1, slidersW * 0.25f));
+    labels.performLayout(sliderLabelBounds);
+
+
+    tuneLabel.setBounds(70, sliderPStartY - 30, 100, 40);
     juce::FlexBox leftP;
-    juce::Rectangle<int> leftPBounds(75, sliderPStartY, 100, 130);
+    juce::Rectangle<int> leftPBounds(70, sliderPStartY, 100, 130);
+    
+
     leftP.flexDirection = juce::FlexBox::Direction::row;
 
     leftP.items.add(juce::FlexItem(velocitySlider).withFlex(0, 1, 100));
@@ -204,17 +220,9 @@ void GrainMotherAudioProcessorEditor::resized()
     durationSlider.setBounds(200, 100, 100, 100);
     panningSlider.setBounds(300, 100, 100, 100);
     readposSlider.setBounds(400, 100, 100, 100);
-    
-
     intervalRandSlider.setBounds(100, 200, 100, 100);
     
-    velocityRandSlider.setBounds(500, 200, 100, 100);
-
-    intervalLabel.setBounds(100, 50, 100, 30);
-    durationLabel.setBounds(200, 50, 100, 30);
-    panningLabel.setBounds(300, 50, 100, 30);
-    readposLabel.setBounds(400, 50, 100, 30);
-    velocityLabel.setBounds(500, 50, 100, 30);*/
+    velocityRandSlider.setBounds(500, 200, 100, 100);*/
 
     juce::Rectangle<int> thumbnailBounds(50, 80, getWidth() - 100, 300);
     audioformComponent.setBounds(thumbnailBounds);
@@ -230,6 +238,7 @@ void GrainMotherAudioProcessorEditor::filesDropped(const juce::StringArray& file
     juce::File file(files[0]);
     audioProcessor.loadAudioFile(file);
     audioformComponent.setFile(file);
+    grainVisualizer.initialize();
     draggingFiles = false;
     repaint();
 }
@@ -265,6 +274,7 @@ void GrainMotherAudioProcessorEditor::buttonClicked(juce::Button* button)
             juce::File file(fileChooser.getResult());
             audioProcessor.loadAudioFile(file);
             audioformComponent.setFile(file);
+            grainVisualizer.initialize();
         }
     }
 }

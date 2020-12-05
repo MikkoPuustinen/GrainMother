@@ -97,6 +97,10 @@ private:
     std::atomic<float>* readposRandParameter = nullptr;
     std::atomic<float>* velocityRandParameter = nullptr;
 
+    std::atomic<float>* masterVolumeParameter = nullptr;
+
+    float previousGain;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GrainMotherAudioProcessor)
 };
