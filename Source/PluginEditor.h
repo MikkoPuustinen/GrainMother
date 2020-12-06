@@ -31,6 +31,10 @@ public:
     {
         thumbnail.addChangeListener(this);
     }
+    ~AudioformComponent()
+    {
+        thumbnail.removeChangeListener(this);
+    }
 
     void paint(juce::Graphics& g) override
     {

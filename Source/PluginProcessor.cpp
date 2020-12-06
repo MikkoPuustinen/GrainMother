@@ -29,7 +29,7 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
             std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,  0.0f  ,     1.0f ,     0.25f ),
             std::make_unique<juce::AudioParameterFloat>("panning"      ,"Panning"      , -1.0f  ,     1.0f ,     0.0f  ), 
             std::make_unique<juce::AudioParameterFloat>("readpos"      ,"Readpos"      ,  0.0f  ,     1.0f ,     0.25f ),
-            std::make_unique<juce::AudioParameterFloat>("velocity"     ,"Velocity"     ,  0.25f ,     4.0f ,     1.0f  ),
+            std::make_unique<juce::AudioParameterFloat>("velocity"     ,"Velocity"     ,  0.5f  ,     2.0f ,     1.0f  ),
             std::make_unique<juce::AudioParameterFloat>("direction"    ,"Direction"    ,  0.0f  ,     1.0f ,     1.0f  ),
             std::make_unique<juce::AudioParameterFloat>("intervalRand" ,"IntervalRand" ,  0.0f  ,     1.0f ,     0.0f  ),
             std::make_unique<juce::AudioParameterFloat>("durationRand" ,"DurationRand" ,  0.0f  ,     1.0f ,     0.0f  ),

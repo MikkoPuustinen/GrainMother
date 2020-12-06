@@ -163,7 +163,7 @@ public:
         , durationParam(100.0f, 100.0f, 0, 44100 * 5)
         , panningParam(0.0f, 0.0f, -1.0f, 1.0f)
         , readposParam(44100.0f, 0.0f, 0, 88200)
-        , velocityParam(1.0f, 0.0f, 0.25f, 4.0f)
+        , velocityParam(1.0f, 0.0f, 0.5f, 2.0f)
         , directionParam(0.0f, 1.0f)
         , sourceBuffer(0, 0)
     {
@@ -241,9 +241,12 @@ public:
                 const int duration = durationParam.get();
                 const float panning = panningParam.get();
                 int readpos;
+
+
                 float div = (float)midiNote / 12;
                 float exp = pow(2, div);
-                const float velocity = velocityParam.get() + exp - 1;
+                const float velocity = velocityParam.get() * ( exp );
+                //const float velocity = exp - 1;
 
                 if (direction == 0) { // 0 = reverse, 1 = normal playback
                     readpos = readposParam.get() + duration;
