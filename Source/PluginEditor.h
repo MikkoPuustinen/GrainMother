@@ -101,7 +101,7 @@ public:
     
     GrainVisualizer(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) : audioProcessor(p) , drag(0), state(STATE_DRAG), valueTreeState(vts)
     {
-        startTimer(50);
+        startTimer(75);
 
         valueTreeState.addParameterListener("interval", this);
         valueTreeState.addParameterListener("duration", this);
@@ -379,6 +379,8 @@ private:
     juce::Slider velocitySlider;
     juce::Slider directionSlider;
 
+    juce::Slider fineTuneSlider;
+    std::unique_ptr<SliderAttachment> fineTuneAttachment;
     juce::Slider outputSlider;
     std::unique_ptr<SliderAttachment> outputAttachment;
 

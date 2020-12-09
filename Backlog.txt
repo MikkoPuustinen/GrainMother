@@ -10,6 +10,7 @@ interval adjustment jumpiness
 DONE:
 
 Maalatun alueen siirtäminen
+Fine tune
 UI
 state management (duration, readpos & interval)
 Interval audioformiin

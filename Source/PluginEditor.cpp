@@ -32,44 +32,23 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     header.setText("GrainMother", juce::dontSendNotification);
     header.setJustificationType(juce::Justification::centred);
     header.setFont(juce::Font(80.0f));
-    //header.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     // Sliders
-
-    /*intervalSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
-    intervalSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
-    addAndMakeVisible(intervalSlider);
-    intervalAttachment.reset(new SliderAttachment(valueTreeState, "interval", intervalSlider));
-
-    durationSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    durationSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
-    addAndMakeVisible(durationSlider);
-    durationAttachment.reset(new SliderAttachment(valueTreeState, "duration", durationSlider));
-
-    panningSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    panningSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
-    addAndMakeVisible(panningSlider);
-    panningAttachment.reset(new SliderAttachment(valueTreeState, "panning", panningSlider));
-
-    readposSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    readposSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
-    addAndMakeVisible(readposSlider);
-    readposAttachment.reset(new SliderAttachment(valueTreeState, "readpos", readposSlider));*/
 
     velocitySlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     velocitySlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
     addAndMakeVisible(velocitySlider);
     velocityAttachment.reset(new SliderAttachment(valueTreeState, "velocity", velocitySlider));
 
+    fineTuneSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    fineTuneSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
+    addAndMakeVisible(fineTuneSlider);
+    fineTuneAttachment.reset(new SliderAttachment(valueTreeState, "fineTune", fineTuneSlider));
+
     directionSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
     directionSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     directionSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
     addAndMakeVisible(directionSlider);
     directionAttachment.reset(new SliderAttachment(valueTreeState, "direction", directionSlider));
-
-    /*intervalRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    intervalRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
-    addAndMakeVisible(intervalRandSlider);
-    intervalRandAttachment.reset(new SliderAttachment(valueTreeState, "intervalRand", intervalRandSlider));*/
 
     outputSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
     outputSlider.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
@@ -88,12 +67,6 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     readposRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
     addAndMakeVisible(readposRandSlider);
     readposRandAttachment.reset(new SliderAttachment(valueTreeState, "readposRand", readposRandSlider));
-
-    /*velocityRandSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    velocityRandSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
-    addAndMakeVisible(velocityRandSlider);
-    velocityRandAttachment.reset(new SliderAttachment(valueTreeState, "velocityRand", velocityRandSlider));*/
-
 
     // Labels 
     tuneLabel.setText("tune", juce::dontSendNotification);
@@ -202,28 +175,16 @@ void GrainMotherAudioProcessorEditor::resized()
     labels.items.add(juce::FlexItem(outputLabel).withFlex(0, 1, slidersW * 0.25f));
     labels.performLayout(sliderLabelBounds);
 
-
     tuneLabel.setBounds(70, sliderPStartY - 30, 100, 40);
     juce::FlexBox leftP;
     juce::Rectangle<int> leftPBounds(70, sliderPStartY, 100, 130);
     
-
     leftP.flexDirection = juce::FlexBox::Direction::row;
 
     leftP.items.add(juce::FlexItem(velocitySlider).withFlex(0, 1, 100));
 
     leftP.performLayout(leftPBounds);
-
-    
-
-    /*intervalSlider.setBounds(100, 100, 100, 100);
-    durationSlider.setBounds(200, 100, 100, 100);
-    panningSlider.setBounds(300, 100, 100, 100);
-    readposSlider.setBounds(400, 100, 100, 100);
-    intervalRandSlider.setBounds(100, 200, 100, 100);
-    
-    velocityRandSlider.setBounds(500, 200, 100, 100);*/
-
+    fineTuneSlider.setBounds(40, getHeight() - 180, 60, 80);
     juce::Rectangle<int> thumbnailBounds(50, 80, getWidth() - 100, 300);
     audioformComponent.setBounds(thumbnailBounds);
 

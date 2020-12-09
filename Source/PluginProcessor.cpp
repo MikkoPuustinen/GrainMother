@@ -29,7 +29,8 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
             std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,  0.0f  ,     1.0f ,     0.25f ),
             std::make_unique<juce::AudioParameterFloat>("panning"      ,"Panning"      , -1.0f  ,     1.0f ,     0.0f  ), 
             std::make_unique<juce::AudioParameterFloat>("readpos"      ,"Readpos"      ,  0.0f  ,     1.0f ,     0.25f ),
-            std::make_unique<juce::AudioParameterFloat>("velocity"     ,"Velocity"     ,  0.5f  ,     2.0f ,     1.0f  ),
+            std::make_unique<juce::AudioParameterInt>  ("velocity"     ,"Velocity"     ,   -12  ,       12 ,     0     ),
+            std::make_unique<juce::AudioParameterInt>  ("fineTune"     ,"FineTune"     , -100   ,     100  ,     0     ),
             std::make_unique<juce::AudioParameterFloat>("direction"    ,"Direction"    ,  0.0f  ,     1.0f ,     1.0f  ),
             std::make_unique<juce::AudioParameterFloat>("intervalRand" ,"IntervalRand" ,  0.0f  ,     1.0f ,     0.0f  ),
             std::make_unique<juce::AudioParameterFloat>("durationRand" ,"DurationRand" ,  0.0f  ,     1.0f ,     0.0f  ),
@@ -61,6 +62,8 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
     parameters.addParameterListener("panning", this);
     parameters.addParameterListener("readpos", this);
     parameters.addParameterListener("velocity", this);
+    parameters.addParameterListener("fineTune", this);
+
     parameters.addParameterListener("direction", this);
 
     parameters.addParameterListener("intervalRand", this);
@@ -101,6 +104,8 @@ void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID
         setReadpos(newValue);
     } else if (parameterID == "velocity") {
         setVelocity(newValue);
+    } else if (parameterID == "fineTune") {
+        setFineTune(newValue);
     } else if (parameterID == "direction") {
         setDirection(newValue);
     } else if (parameterID == "intervalRand") {
@@ -143,7 +148,11 @@ void GrainMotherAudioProcessor::setReadpos(float readpos)
 }
 void GrainMotherAudioProcessor::setVelocity(float velocity)
 {
-    puroEngine.velocityParam.centre = (float)velocity;
+    puroEngine.velocityParam.centre = (float)velocity / 12;
+}
+void GrainMotherAudioProcessor::setFineTune(float fineTune)
+{
+    puroEngine.fineTuneParam.centre = (float)fineTune;
 }
 void GrainMotherAudioProcessor::setDirection(float direction)
 {

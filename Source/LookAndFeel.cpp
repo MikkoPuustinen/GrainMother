@@ -51,7 +51,7 @@ void GrainMotherSliderLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, in
 
     Rectangle<float> minR(2, 10);
     Rectangle<float> maxR(2, 10);
-    const float offset = 45;
+    const float offset = radius + 5;
 
     Point<float> minPoint(bounds.getCentreX() + offset * std::cos(rotaryStartAngle - MathConstants<float>::halfPi),
         bounds.getCentreY() + offset * std::sin(rotaryStartAngle - MathConstants<float>::halfPi));

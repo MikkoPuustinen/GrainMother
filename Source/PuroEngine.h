@@ -163,7 +163,8 @@ public:
         , durationParam(100.0f, 100.0f, 0, 44100 * 5)
         , panningParam(0.0f, 0.0f, -1.0f, 1.0f)
         , readposParam(44100.0f, 0.0f, 0, 88200)
-        , velocityParam(1.0f, 0.0f, 0.5f, 2.0f)
+        , velocityParam(0.0f, 0.0f,-1.0f, 1.0f)
+        , fineTuneParam(-100, 100)
         , directionParam(0.0f, 1.0f)
         , sourceBuffer(0, 0)
     {
@@ -241,11 +242,16 @@ public:
                 const int duration = durationParam.get();
                 const float panning = panningParam.get();
                 int readpos;
-
-
-                float div = (float)midiNote / 12;
+                
+                const float fineTune = fineTuneParam.get();
+                float base = std::exp(std::log(2) / 1200);
+                float cent = pow(base, fineTune);
+                const float note = (float)midiNote / 12.0f;
+                const float fineT = (float)fineTune / 1200.0f;
+                float div = ((float)velocityParam.get() + note) ;
                 float exp = pow(2, div);
-                const float velocity = velocityParam.get() * ( exp );
+                
+                const float velocity = exp * cent;
                 //const float velocity = exp - 1;
 
                 if (direction == 0) { // 0 = reverse, 1 = normal playback
@@ -293,5 +299,6 @@ public:
     puro::Parameter<float, false> panningParam;
     puro::Parameter<int, false> readposParam;
     puro::Parameter<float, true> velocityParam;
+    puro::Parameter<float, true> fineTuneParam;
     puro::Parameter<float, true> directionParam;
 };
