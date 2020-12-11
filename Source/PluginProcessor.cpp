@@ -261,8 +261,6 @@ void GrainMotherAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     previousGain = *masterVolumeParameter;
 
     setDirection(parameters.getParameter("direction")->getValue());
-    //const float getV = parameters.getParameter("interval")->getValue();
-    //parameters.getParameter("interval")->setValueNotifyingHost(0.09f);
     setReadposRand(parameters.getParameter("readposRand")->getValue());
     setPanningRand(parameters.getParameter("panningRand")->getValue());
 }
@@ -406,7 +404,6 @@ void GrainMotherAudioProcessor::loadAudioFile(juce::File file)
     setReadpos(parameters.getParameter("readpos")->getValue());
     const float intervalP = puroEngine.intervalParam.get();
     puroEngine.timer.interval = puro::math::round(puroEngine.durationParam.centre / intervalP);
-   // setInterval(parameters.getParameter("interval")->getValue());
 }
 
 float GrainMotherAudioProcessor::getMaximumPosition() {

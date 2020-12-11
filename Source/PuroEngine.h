@@ -121,6 +121,7 @@ bool process_grain(BufferType dst, ElementType& grain, ContextType& context, con
         grain.readPos = puro::interp3_fill(audio, source, grain.readPos, -1 * grain.readInc);
     }
     else {
+        
         grain.readPos = puro::interp3_fill(audio, source, grain.readPos, grain.readInc);
     }
     
@@ -259,18 +260,23 @@ public:
                 }
                 else {
                     readpos = readposParam.get();
+                    if (readpos + duration > sourceBuffer.length())
+                        readpos -= (readpos + duration) - sourceBuffer.length();
                 }
 
                 // push to the pool of grains, get a handle in return
-                auto it = pool.push(Grain(blockSize - n, duration, readpos, panning, velocity, sourceBuffer.length(), direction, midiNote));
-
-                // immediately process the first block for the newly created grain, potentially also already removing it
-                // if the pool is full, it rejects the push operation and returns invalid iterator, and the grain doesn't get added
-                if (it.is_valid())
+                if (readpos < sourceBuffer.length())
                 {
-                    if (process_grain(buffer, it.get(), context, source, true))
+                    auto it = pool.push(Grain(blockSize - n, duration, readpos, panning, velocity, sourceBuffer.length(), direction, midiNote));
+
+                    // immediately process the first block for the newly created grain, potentially also already removing it
+                    // if the pool is full, it rejects the push operation and returns invalid iterator, and the grain doesn't get added
+                    if (it.is_valid())
                     {
-                        pool.pop(it);
+                        if (process_grain(buffer, it.get(), context, source, true))
+                        {
+                            pool.pop(it);
+                        }
                     }
                 }
             }
@@ -278,15 +284,6 @@ public:
         if (activeNotes.size() < 1) {
             timer.counter = timer.interval;
         }
-    }
-
-    void end_grain()
-    {
-        for (auto&& it : pool)
-        {
-            it.get().alignment.remaining = 1000;
-        }
-        timer.counter = timer.interval;
     }
 
     Context context;

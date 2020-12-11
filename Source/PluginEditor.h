@@ -29,6 +29,7 @@ public:
         GrainMotherAudioProcessor& p)
         : thumbnail(sourceSamplesPerThumbnailSample, formatManager, cache), audioProcessor(p), start(3.0f), end(400.0f)
     {
+        setBufferedToImage(true);
         thumbnail.addChangeListener(this);
     }
     ~AudioformComponent()
@@ -87,47 +88,41 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioformComponent)
 
 };
-
-/**
-*
-* Draws the visualization for the individual grains and handles the mouse events happening on the audioform
-*/
-
-class GrainVisualizer : public juce::Component
-                      , public juce::Timer
+class AudioformEvents : public juce::Component
                       , public juce::AudioProcessorValueTreeState::Listener
 {
 public:
-    
-    GrainVisualizer(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) : audioProcessor(p) , drag(0), state(STATE_DRAG), valueTreeState(vts)
+    AudioformEvents(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) : drag(0), audioProcessor(p), valueTreeState(vts), state(STATE_DRAG)
     {
-        startTimer(75);
-
         valueTreeState.addParameterListener("interval", this);
         valueTreeState.addParameterListener("duration", this);
         valueTreeState.addParameterListener("readpos", this);
     }
-
-    ~GrainVisualizer()
+    ~AudioformEvents()
     {
         valueTreeState.removeParameterListener("interval", this);
         valueTreeState.removeParameterListener("duration", this);
         valueTreeState.removeParameterListener("readpos", this);
     }
+
     void parameterChanged(const juce::String& parameterID, float newValue) override
     {
         if (parameterID == "interval")
         {
             interval = valueTreeState.getParameter("interval")->convertTo0to1(newValue) * getLocalBounds().getHeight();
         }
-        else if (parameterID == "duration") 
+        else if (parameterID == "duration")
         {
-            end = start + (newValue * getLocalBounds().getWidth());
+            end = start + (newValue * (getLocalBounds().getWidth() - 10));
+            float dur2 = (end - start) / (getLocalBounds().getWidth() - 10);
             diff = end - start;
         }
-        else if (parameterID == "readpos") 
+        else if (parameterID == "readpos")
         {
             start = newValue * getLocalBounds().getWidth();
+            if (start <= 5)
+                start = 5;
+
             end = start + diff;
         }
     }
@@ -142,9 +137,9 @@ public:
             state = STATE_DRAG;
             valueTreeState.getParameter("duration")->beginChangeGesture();
             valueTreeState.getParameter("readpos")->beginChangeGesture();
-            eventStart = event.position.x;
-            start = event.position.x;
-            end = event.position.x;
+            eventStart = event.position.x + 5;
+            start = event.position.x + 5;
+            end = event.position.x + 5;
         }
         else {
             valueTreeState.getParameter("readpos")->beginChangeGesture();
@@ -153,35 +148,38 @@ public:
     }
     void setProcessorValues()
     {
-        float dur2 = (end - start) / getLocalBounds().getWidth();
-        const float readpos = start / getLocalBounds().getWidth();
+        float dur2 = (end - start) / (getLocalBounds().getWidth() - 10);
+        const float readpos = (start - 5) / (getLocalBounds().getWidth() - 10);
         if (dur2 <= 0)
             dur2 = 0.01;
 
-        valueTreeState.getParameter("duration")->setValueNotifyingHost(dur2);
-        valueTreeState.getParameter("readpos")->setValueNotifyingHost(readpos);
+        valueTreeState.getParameter("duration")->setValue(dur2);
+        valueTreeState.getParameter("readpos")->setValue(readpos);
+        audioProcessor.setDuration(dur2);
+        audioProcessor.setReadpos(readpos);
+        DBG(readpos + dur2);
     }
 
     void mouseUp(const juce::MouseEvent& event) override
     {
         switch (state)
         {
-            case STATE_DRAG:
-            {
-                valueTreeState.getParameter("duration")->endChangeGesture();
-                valueTreeState.getParameter("readpos")->endChangeGesture();
-                break;
-            }
-            case STATE_MOVE:
-            {
-                valueTreeState.getParameter("readpos")->endChangeGesture();
-                break;
-            }
-            case STATE_INTERVAL:
-            {
-                valueTreeState.getParameter("interval")->endChangeGesture();
-                break;
-            }
+        case STATE_DRAG:
+        {
+            valueTreeState.getParameter("duration")->endChangeGesture();
+            valueTreeState.getParameter("readpos")->endChangeGesture();
+            break;
+        }
+        case STATE_MOVE:
+        {
+            valueTreeState.getParameter("readpos")->endChangeGesture();
+            break;
+        }
+        case STATE_INTERVAL:
+        {
+            valueTreeState.getParameter("interval")->endChangeGesture();
+            break;
+        }
         }
         drag = 0;
     }
@@ -190,70 +188,68 @@ public:
         switch (state)
         {
         case STATE_DRAG:
-            {
-                const float x = event.position.x;
-                if (x < eventStart) {
-                    start = x;
-                    end = eventStart;
-                }
-                else {
-                    end = x;
-                    start = eventStart;
-                }
-                if (start < 0) {
-                    start = 0;
-                }
-                if (end > getLocalBounds().getWidth()) {
-                    end = getLocalBounds().getWidth();
-                }
-                if (start == end)
-                    end++;
+        {
+            const float x = event.position.x;
+            if (x < eventStart) {
+                start = x;
+                end = eventStart;
+            }
+            else {
+                end = x;
+                start = eventStart;
+            }
+            if (start <= 5) {
+                start = 5;
+            }
+            if (end >= getLocalBounds().getWidth() - 5) {
+                end = getLocalBounds().getWidth() - 5;
+            }
+            
 
-                diff = end - start;
-                setProcessorValues();
-                break;
-            }
-        case STATE_MOVE:
-            {
-                if (drag == 0) {
-                    drag = event.position.x;
-                }
-                else {
-                    start += event.position.x - drag;
-                    end += event.position.x - drag;
-
-                    if (start < 0) {
-                        start = 0;
-                        end = diff;
-                    }
-                    if (end > getLocalBounds().getWidth()) {
-                        end = getLocalBounds().getWidth();
-                        start = getLocalBounds().getWidth() - diff;
-                    }
-                    drag = event.position.x;
-                }
-                setProcessorValues();
-                break;
-            }
-        case STATE_INTERVAL:
-            {
-                if (drag == 0) {
-                    drag = event.position.y;
-                }
-                else {
-                    interval -= event.position.y  - drag;
-                    if (interval < 1)                            { interval = 1; }
-                    if (interval > getLocalBounds().getHeight()) { interval = getLocalBounds().getHeight(); }
-                    const float intervalP = (interval) / getLocalBounds().getHeight();
-                    valueTreeState.getParameter("interval")->setValueNotifyingHost(intervalP);
-                    drag = event.position.y;
-                }
-                break;
-            }
+            diff = end - start;
+            setProcessorValues();
+            break;
         }
-        //repaint();
+        case STATE_MOVE:
+        {
+            if (drag == 0) {
+                drag = event.position.x;
+            }
+            else {
+                start += event.position.x - drag;
+                end += event.position.x - drag;
+
+                if (start <= 5) {
+                    start = 5;
+                    end = start + diff;
+                }
+                if (end >= getLocalBounds().getWidth() - 5) {
+                    end = getLocalBounds().getWidth() - 5;
+                    start = getLocalBounds().getWidth() - diff - 5;
+                }
+                drag = event.position.x;
+            }
+            setProcessorValues();
+            break;
+        }
+        case STATE_INTERVAL:
+        {
+            if (drag == 0) {
+                drag = event.position.y;
+            }
+            else {
+                interval -= event.position.y - drag;
+                if (interval < 1) { interval = 1; }
+                if (interval > getLocalBounds().getHeight()) { interval = getLocalBounds().getHeight(); }
+                const float intervalP = (interval) / getLocalBounds().getHeight();
+                valueTreeState.getParameter("interval")->setValueNotifyingHost(intervalP);
+                drag = event.position.y;
+            }
+            break;
+        }
+        }
+        repaint();
     }
-    
     void paint(juce::Graphics& g) override
     {
         float duration = 0;
@@ -263,7 +259,7 @@ public:
             g.fillRect((int)start, getLocalBounds().getHeight() - (int)interval + 2, (int)duration, getLocalBounds().getHeight());
             g.setColour(juce::Colour(51, 51, juce::uint8(51)));
             g.fillRoundedRectangle((int)start - 2, 0, 4, getLocalBounds().getHeight(), 1.5f);
-            g.fillRoundedRectangle((int)end   - 2, 0, 4, getLocalBounds().getHeight(), 1.5f);
+            g.fillRoundedRectangle((int)end - 2, 0, 4, getLocalBounds().getHeight(), 1.5f);
             handleX = end - duration * 0.5f;
             handleY = getLocalBounds().getHeight() - interval;
             g.setColour(juce::Colour(51, 51, juce::uint8(51), juce::uint8(128)));
@@ -273,8 +269,58 @@ public:
             juce::Rectangle<float> handle(0, 0, 50, 10);
             g.fillRoundedRectangle(handle.withCentre(handleP), 3.0f);
         }
-        g.setColour(juce::Colour(0,181, 142));
-        int grainAmount = (int)grains.size() / 2;
+    }
+    void initialize()
+   {
+       auto range = valueTreeState.getParameter("interval")->getNormalisableRange();
+
+       interval = valueTreeState.getParameter("interval")->getValue() * getLocalBounds().getHeight();
+       start = valueTreeState.getParameter("readpos")->getValue() * getLocalBounds().getWidth() + 5;
+       end = start + valueTreeState.getParameter("duration")->getValue() * getLocalBounds().getWidth();
+       diff = end - start;
+       setProcessorValues();
+       repaint();
+   }
+
+private:
+    juce::AudioProcessorValueTreeState& valueTreeState;
+    GrainMotherAudioProcessor& audioProcessor;
+
+    enum state { STATE_DRAG, STATE_MOVE, STATE_INTERVAL } state;
+    float end;
+    float start;
+    float interval;
+    float diff;
+
+    float handleX;
+    float handleY;
+    float drag;
+    float eventStart;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioformEvents)
+};
+
+/**
+*
+* Draws the visualization for the individual grains and handles the mouse events happening on the audioform
+*/
+
+class GrainVisualizer : public juce::Component
+                      , public juce::Timer
+{
+public:
+    
+    GrainVisualizer(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) : audioProcessor(p)
+    {
+        startTimer(60);
+    }
+
+    ~GrainVisualizer()
+    {
+    }
+    void paint(juce::Graphics& g) override
+    {
+        int maxDev = (int)grains.size() * 0.25f;
 
         // iterate over the grains and draw them on the audioform
         for (auto&& grain : grains) {
@@ -286,10 +332,10 @@ public:
                 g.setColour(juce::Colour(108, 105, 141)); // left to right
             }
             int heightDev;
-            if (grainAmount < 1) {
+            if (maxDev < 1) {
                 heightDev = 0;
             } else {
-                heightDev = juce::Random::getSystemRandom().nextInt(juce::Range<int>(-1 * grainAmount, grainAmount));
+                heightDev = juce::Random::getSystemRandom().nextInt(juce::Range<int>(-1 * maxDev, maxDev));
             }
             const float position = x.readPos / audioProcessor.getMaximumSampleCount() * getLocalBounds().getWidth();
             g.fillEllipse(position, getLocalBounds().getHeight() / 2 + heightDev, 10, 10);
@@ -300,38 +346,11 @@ public:
         this->grains = audioProcessor.getGrainPool();
         repaint();
     }
-    void initialize()
-    {
-        auto range = valueTreeState.getParameter("interval")->getNormalisableRange();
-        
-        interval = valueTreeState.getParameter("interval")->getValue() * getLocalBounds().getHeight();
-        start = valueTreeState.getParameter("readpos")->getValue() * getLocalBounds().getWidth();
-        end = start + valueTreeState.getParameter("duration")->getValue() * getLocalBounds().getWidth();
-        diff = end - start;
-        setProcessorValues();
-        repaint();
-    }
 
 private:
     puro::AlignedPool<Grain> grains;
 
     GrainMotherAudioProcessor& audioProcessor;
-    float drag;
-
-    enum state { STATE_DRAG, STATE_MOVE, STATE_INTERVAL } state;
-
-    float diff;
-    float start;
-    float end;
-
-    float eventStart;
-
-    float interval;
-
-    juce::AudioProcessorValueTreeState& valueTreeState;
-
-    float handleX;
-    float handleY;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GrainVisualizer)
 };
 
@@ -354,7 +373,6 @@ public:
     void resized() override;
 
     void buttonClicked(juce::Button* button) override;
-
 
     bool isInterestedInFileDrag(const juce::StringArray& files) override;
     void filesDropped(const juce::StringArray& files, int x, int y) override;
@@ -417,8 +435,9 @@ private:
     juce::AudioThumbnailCache thumbnailCache;
 
     AudioformComponent audioformComponent;
-
+    AudioformEvents audioformEvents;
     GrainVisualizer grainVisualizer;
+
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GrainMotherAudioProcessorEditor)
 };

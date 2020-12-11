@@ -9,6 +9,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#define JUCE_ENABLE_REPAINT_DEBUGGING
 //==============================================================================
 GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts)
     : AudioProcessorEditor (&p)
@@ -17,14 +18,18 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     , audioFileDialogButton("loadAudioButton")
     , thumbnailCache(5)
     , audioformComponent(1024, formatManager, thumbnailCache, p)
+    , audioformEvents(p, vts)
     , grainVisualizer(p, vts)
     , draggingFiles(false)
 {
+    setOpaque(true);
     juce::LookAndFeel::setDefaultLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     formatManager.registerBasicFormats();
     addAndMakeVisible(&audioformComponent);
-
+    
+    addAndMakeVisible(&audioformEvents);
     addAndMakeVisible(&grainVisualizer);
+    grainVisualizer.setInterceptsMouseClicks(false, false);
     
     setSize(1000, 750);
     
@@ -96,7 +101,7 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     juce::File file(audioProcessor.filePath.getValue());
     audioformComponent.setFile(file);
     if (!audioformComponent.hasFile())
-        grainVisualizer.initialize();
+        audioformEvents.initialize();
 
     addAndMakeVisible(audioFileDialogButton);
     audioFileDialogButton.addListener(this);
@@ -112,7 +117,7 @@ void GrainMotherAudioProcessorEditor::paint(juce::Graphics& g)
     g.fillAll(juce::Colour(246,244,243));
 
     const int sliderPStartY = getHeight() * 0.5f + 50;
-    auto uiPath = juce::Path();
+    juce::Path uiPath;
     const float curve = 10;
     //uiPath.startNewSubPath(0, getHeight());
     uiPath.startNewSubPath(0, getHeight() - 75);
@@ -187,6 +192,8 @@ void GrainMotherAudioProcessorEditor::resized()
     fineTuneSlider.setBounds(40, getHeight() - 180, 60, 80);
     juce::Rectangle<int> thumbnailBounds(50, 80, getWidth() - 100, 300);
     audioformComponent.setBounds(thumbnailBounds);
+    juce::Rectangle<int> eventBounds(50 - 5, 80, getWidth() - 90, 300);
+    audioformEvents.setBounds(eventBounds);
 
     grainVisualizer.setBounds(thumbnailBounds);
 
@@ -199,7 +206,7 @@ void GrainMotherAudioProcessorEditor::filesDropped(const juce::StringArray& file
     juce::File file(files[0]);
     audioProcessor.loadAudioFile(file);
     audioformComponent.setFile(file);
-    grainVisualizer.initialize();
+    audioformEvents.initialize();
     draggingFiles = false;
     repaint();
 }
@@ -235,7 +242,7 @@ void GrainMotherAudioProcessorEditor::buttonClicked(juce::Button* button)
             juce::File file(fileChooser.getResult());
             audioProcessor.loadAudioFile(file);
             audioformComponent.setFile(file);
-            grainVisualizer.initialize();
+            audioformEvents.initialize();
         }
     }
 }
