@@ -88,6 +88,34 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioformComponent)
 
 };
+
+class AudioformHandle : public juce::Component
+{
+public:
+    AudioformHandle() {
+
+    }
+    void mouseDown(const juce::MouseEvent& e) override
+    {
+        dragger.startDraggingComponent(this, e);
+    }
+    void mouseDrag(const juce::MouseEvent& e) override
+    {
+        dragger.dragComponent(this, e, nullptr);
+    }
+    void paint(juce::Graphics& g) override
+    {
+
+    }
+private:
+
+    juce::ComponentDragger dragger;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioformHandle)
+
+};
+
+
 class AudioformEvents : public juce::Component
                       , public juce::AudioProcessorValueTreeState::Listener
 {
@@ -151,13 +179,12 @@ public:
         float dur2 = (end - start) / (getLocalBounds().getWidth() - 10);
         const float readpos = (start - 5) / (getLocalBounds().getWidth() - 10);
         if (dur2 <= 0)
-            dur2 = 0.01;
+            dur2 = 0.001;
 
         valueTreeState.getParameter("duration")->setValue(dur2);
         valueTreeState.getParameter("readpos")->setValue(readpos);
         audioProcessor.setDuration(dur2);
         audioProcessor.setReadpos(readpos);
-        DBG(readpos + dur2);
     }
 
     void mouseUp(const juce::MouseEvent& event) override
@@ -390,10 +417,6 @@ private:
 
     juce::TextButton audioFileDialogButton;
 
-    juce::Slider intervalSlider;
-    juce::Slider durationSlider;
-    juce::Slider panningSlider;
-    juce::Slider readposSlider;
     juce::Slider velocitySlider;
     juce::Slider directionSlider;
 
@@ -402,25 +425,14 @@ private:
     juce::Slider outputSlider;
     std::unique_ptr<SliderAttachment> outputAttachment;
 
-    std::unique_ptr<SliderAttachment> intervalAttachment;
-    std::unique_ptr<SliderAttachment> durationAttachment;
-    std::unique_ptr<SliderAttachment> panningAttachment;
-    std::unique_ptr<SliderAttachment> readposAttachment;
     std::unique_ptr<SliderAttachment> velocityAttachment;
     std::unique_ptr<SliderAttachment> directionAttachment;
 
-    juce::Slider intervalRandSlider;
-    juce::Slider durationRandSlider;
     juce::Slider panningRandSlider;
     juce::Slider readposRandSlider;
-    juce::Slider velocityRandSlider;
 
-    std::unique_ptr<SliderAttachment> intervalRandAttachment;
-    std::unique_ptr<SliderAttachment> durationRandAttachment;
     std::unique_ptr<SliderAttachment> panningRandAttachment;
     std::unique_ptr<SliderAttachment> readposRandAttachment;
-    std::unique_ptr<SliderAttachment> velocityRandAttachment;
-
 
     juce::Label tuneLabel;
     juce::Label directionLabel;

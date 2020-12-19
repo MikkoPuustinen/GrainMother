@@ -1,15 +1,16 @@
 TODO: 
 
-INITIALIZATION
+Samplen lataus logic/pluginhost
 Samplerate bugi
 reunojen liikutus
 grain amount info display
 interval adjustment jumpiness
-
+zoom
 
 DONE:
 
 Maalatun alueen siirtäminen
+INITIALIZATION
 Fine tune
 UI
 state management (duration, readpos & interval)

@@ -131,12 +131,12 @@ void GrainMotherAudioProcessor::setInterval(float interval)
 
 void GrainMotherAudioProcessor::setDuration(float duration)
 {
-    if (duration <= 0.0f)
-    {
-        duration = 0.01f;
-    }
-
-    puroEngine.durationParam.centre = (float)(duration * getMaximumPosition() * this->getSampleRate());
+    if (duration > 1.0f)
+        duration = 1.0f;
+    float sampleDuration = (float)(duration * getMaximumPosition() * this->getSampleRate());
+    if (sampleDuration < 0)
+        sampleDuration = 0.0f;
+    puroEngine.durationParam.centre = sampleDuration;
 }
 void GrainMotherAudioProcessor::setPanning(float panning)
 {
@@ -253,8 +253,9 @@ void GrainMotherAudioProcessor::changeProgramName (int index, const juce::String
 }
 
 //==============================================================================
-void GrainMotherAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void GrainMotherAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
+    auto f = filePath.getValue();
     juce::File file(filePath.getValue());
     loadAudioFile(file);
 
@@ -371,6 +372,7 @@ void GrainMotherAudioProcessor::setStateInformation (const void* data, int sizeI
         {
             parameters.replaceState(juce::ValueTree::fromXml(*xmlState));
             filePath.referTo(parameters.state.getPropertyAsValue("AUDIO_FILEPATH", nullptr, true));
+            loadAudioFile(juce::File(filePath.getValue()));
         }
 }
 

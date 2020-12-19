@@ -168,6 +168,7 @@ public:
         , fineTuneParam(-100, 100)
         , directionParam(0.0f, 1.0f)
         , sourceBuffer(0, 0)
+        , halfStep(std::exp(std::log(2) / 1200))
     {
         pool.elements.reserve(4096);
     }
@@ -245,8 +246,8 @@ public:
                 int readpos;
                 
                 const float fineTune = fineTuneParam.get();
-                float base = std::exp(std::log(2) / 1200);
-                float cent = pow(base, fineTune);
+                
+                float cent = pow(halfStep, fineTune);
                 const float note = (float)midiNote / 12.0f;
                 const float fineT = (float)fineTune / 1200.0f;
                 float div = ((float)velocityParam.get() + note) ;
@@ -298,4 +299,7 @@ public:
     puro::Parameter<float, true> velocityParam;
     puro::Parameter<float, true> fineTuneParam;
     puro::Parameter<float, true> directionParam;
+
+    private:
+        const float halfStep;
 };
