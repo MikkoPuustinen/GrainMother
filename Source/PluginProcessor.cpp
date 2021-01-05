@@ -26,9 +26,9 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
                                                         "Interval",             // parameter name
                                                         juce::NormalisableRange(0.5f, 1000.0f, 0.5f, 0.3f, false),  //range 
                                                         1.0f),                  // default value
-            std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,  0.0f  ,     1.0f ,     0.25f ),
+            std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,juce::NormalisableRange(0.0f, 1.0f) ,     0.250f ),
             std::make_unique<juce::AudioParameterFloat>("panning"      ,"Panning"      , -1.0f  ,     1.0f ,     0.0f  ), 
-            std::make_unique<juce::AudioParameterFloat>("readpos"      ,"Readpos"      ,  0.0f  ,     1.0f ,     0.25f ),
+            std::make_unique<juce::AudioParameterFloat>("readpos"      ,"Readpos"      ,juce::NormalisableRange(0.0f, 1.0f) ,     0.250f ),
             std::make_unique<juce::AudioParameterInt>  ("velocity"     ,"Velocity"     ,   -12  ,       12 ,     0     ),
             std::make_unique<juce::AudioParameterInt>  ("fineTune"     ,"FineTune"     , -100   ,     100  ,     0     ),
             std::make_unique<juce::AudioParameterFloat>("direction"    ,"Direction"    ,  0.0f  ,     1.0f ,     1.0f  ),
