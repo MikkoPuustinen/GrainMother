@@ -75,10 +75,10 @@ public:
         if (dur2 <= 0)
             dur2 = 0.001f;
 
-        valueTreeState.getParameter("duration")->setValue(dur2);
-        valueTreeState.getParameter("readpos")->setValue(readpos);
-        audioProcessor.setDuration(dur2);
-        audioProcessor.setReadpos(readpos);
+        valueTreeState.getParameter("duration")->setValueNotifyingHost(dur2);
+        valueTreeState.getParameter("readpos")->setValueNotifyingHost(readpos);
+        //audioProcessor.setDuration(dur2);
+        //audioProcessor.setReadpos(readpos);
     }
     void resized() override
     {
