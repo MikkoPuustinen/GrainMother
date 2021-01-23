@@ -1,7 +1,6 @@
 #pragma once
 #include <JuceHeader.h>
 
-#include "IntervalHandle.h"
 class AudioformEvents;
 
 class AudioformHandle : public juce::Component

@@ -36,20 +36,12 @@
       <FILE id="dV2xT2" name="utility.hpp" compile="0" resource="0" file="puro/src/utility.hpp"/>
     </GROUP>
     <GROUP id="{7D3C0223-817A-9626-D2F9-1C41FFCF1710}" name="Source">
-      <FILE id="OsX7Ht" name="IntervalHandle.cpp" compile="1" resource="0"
-            file="Source/IntervalHandle.cpp"/>
-      <FILE id="bxZ7pq" name="IntervalHandle.h" compile="0" resource="0"
-            file="Source/IntervalHandle.h"/>
       <FILE id="UlsvFG" name="AudioFormEvents.h" compile="0" resource="0"
             file="Source/AudioFormEvents.h"/>
       <FILE id="VVp912" name="AudioFormHandle.cpp" compile="1" resource="0"
             file="Source/AudioFormHandle.cpp"/>
       <FILE id="N6AGVQ" name="AudioFormHandle.h" compile="0" resource="0"
             file="Source/AudioFormHandle.h"/>
-      <FILE id="LVsoq5" name="PositionHandle.cpp" compile="1" resource="0"
-            file="Source/PositionHandle.cpp"/>
-      <FILE id="c91ffH" name="PositionHandle.h" compile="0" resource="0"
-            file="Source/PositionHandle.h"/>
       <FILE id="dXBxZ5" name="LookAndFeel.cpp" compile="1" resource="0" file="Source/LookAndFeel.cpp"/>
       <FILE id="NFBEz4" name="LookAndFeel.h" compile="0" resource="0" file="Source/LookAndFeel.h"/>
       <FILE id="khdxXQ" name="PuroEngine.h" compile="0" resource="0" file="Source/PuroEngine.h"/>

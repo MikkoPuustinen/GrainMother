@@ -2,9 +2,6 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "AudioFormHandle.h"
-#include "PositionHandle.h"
-#include "IntervalHandle.h"
-
 
 class AudioformEvents : public juce::Component
                       , public juce::Timer
