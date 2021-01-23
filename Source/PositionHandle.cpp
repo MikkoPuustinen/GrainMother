@@ -29,6 +29,5 @@ void PositionHandle::mouseDrag(const juce::MouseEvent& e)
     }
 void PositionHandle::paint(juce::Graphics& g)
 {
-    //g.setColour(juce::Colour(51, 51, juce::uint8(51)));
-    //g.fillRoundedRectangle(0, 0, getLocalBounds().getWidth(), getLocalBounds().getHeight(), 1.5f);
+    g.fillAll(juce::Colour(0, 0, 255));
 }

@@ -99,8 +99,8 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
 
     juce::File file(audioProcessor.filePath.getValue());
     audioformComponent.setFile(file);
-    if (!audioformComponent.hasFile())
-        audioformEvents.initialize();
+    //if (!audioformComponent.hasFile())
+        //audioformEvents.initialize();
 
     addAndMakeVisible(audioFileDialogButton);
     audioFileDialogButton.addListener(this);
@@ -171,7 +171,7 @@ void GrainMotherAudioProcessorEditor::resized()
     juce::FlexBox labels;
     labels.flexDirection = juce::FlexBox::Direction::row;
 
-    juce::Rectangle<int> sliderLabelBounds(getWidth() * 0.25f, sliderPStartY +10, slidersW, 40);
+    juce::Rectangle<int> sliderLabelBounds(getWidth() * 0.25f, sliderPStartY + 10, slidersW, 40);
 
     labels.items.add(juce::FlexItem(directionLabel).withFlex(0, 1, slidersW * 0.25f));
     labels.items.add(juce::FlexItem(randomReadposLabel).withFlex(0, 1, slidersW * 0.25f));
@@ -191,7 +191,7 @@ void GrainMotherAudioProcessorEditor::resized()
     fineTuneSlider.setBounds(40, getHeight() - 180, 60, 80);
     juce::Rectangle<int> thumbnailBounds(50, 80, getWidth() - 100, 300);
     audioformComponent.setBounds(thumbnailBounds);
-    juce::Rectangle<int> eventBounds(50 - 5, 80, getWidth() - 90, 300);
+    juce::Rectangle<int> eventBounds(50 - 4, 80, getWidth() - 92, 300);
     audioformEvents.setBounds(eventBounds);
 
     grainVisualizer.setBounds(thumbnailBounds);
@@ -205,7 +205,7 @@ void GrainMotherAudioProcessorEditor::filesDropped(const juce::StringArray& file
     juce::File file(files[0]);
     audioProcessor.loadAudioFile(file);
     audioformComponent.setFile(file);
-    audioformEvents.initialize();
+    // audioformEvents.initialize();
     draggingFiles = false;
     repaint();
 }
@@ -241,7 +241,7 @@ void GrainMotherAudioProcessorEditor::buttonClicked(juce::Button* button)
             juce::File file(fileChooser.getResult());
             audioProcessor.loadAudioFile(file);
             audioformComponent.setFile(file);
-            audioformEvents.initialize();
+            // audioformEvents.initialize();
         }
     }
 }

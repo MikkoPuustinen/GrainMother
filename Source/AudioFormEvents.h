@@ -3,60 +3,78 @@
 #include "PluginProcessor.h"
 #include "AudioFormHandle.h"
 #include "PositionHandle.h"
+#include "IntervalHandle.h"
 
 
 class AudioformEvents : public juce::Component
-    , public juce::Timer
+                      , public juce::Timer
 {
 public:
-    AudioformEvents(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) : drag(0),
-        audioProcessor(p), valueTreeState(vts), state(STATE_DRAG), events(this), left(this,true), right(this, false)
+    AudioformEvents(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) :
+        audioProcessor(p), valueTreeState(vts), state(STATE_DRAG), selectableRange(0, 0, 910, 1), events(this)
     {
         addAndMakeVisible(events);
-        addAndMakeVisible(left);
-        addAndMakeVisible(right);
+        events.addMouseListener(this, false);
         startTimer(40);
     }
     ~AudioformEvents()
     {
+        events.removeMouseListener(this);
     }
 
-    void mouseDown(const juce::MouseEvent& event) override
+    void mouseDown(const juce::MouseEvent& e) override
     {
-        if (std::abs(event.position.x - handleX) < 15 && std::abs(event.position.y - handleY) < 15) {
-            state = STATE_INTERVAL;
-            valueTreeState.getParameter("interval")->beginChangeGesture();
+        if (selectableRange.contains(e.getPosition().getX(), e.getPosition().getY()))
+        {
+            state = STATE_NONE;
         }
-        else if (!(event.position.x > start && event.position.x < end)) {
+        else if (left.contains(e.getPosition().getX(), e.getPosition().getY()))
+        {
+            state = STATE_LEFT;
+        }
+        else if (right.contains(e.getPosition().getX(), e.getPosition().getY()))
+        {
+            state = STATE_RIGHT;
+        }
+        else {
             state = STATE_DRAG;
             valueTreeState.getParameter("duration")->beginChangeGesture();
             valueTreeState.getParameter("readpos")->beginChangeGesture();
-            eventStart = event.position.x + 5;
-            start = event.position.x + 5;
-            end = event.position.x + 5;
-        }
-        else {
-            valueTreeState.getParameter("readpos")->beginChangeGesture();
-            state = STATE_MOVE;
+            eventStart = e.position.x;
         }
     }
-    void changeStart(const float newStart) {
-        this->start = newStart;
-        const float e = end / getLocalBounds().getWidth();
+    void changeStart(const float newStart) 
+    {
+        start = newStart;
+        const float e = (getReadpos() + getDuration()) * getLocalBounds().getWidth() / getLocalBounds().getWidth();
         const float s = newStart / getLocalBounds().getWidth();
         valueTreeState.getParameter("duration")->setValueNotifyingHost(e - s);
         valueTreeState.getParameter("readpos")->setValueNotifyingHost(s);
     }
-    void changeEnd(const float newEnd) {
-        this->end = newEnd;
-        const float s = start / getLocalBounds().getWidth();
+    void changeEnd(const float newEnd)
+    {
+        end = newEnd;
+        const float s = getReadpos() * getLocalBounds().getWidth() / getLocalBounds().getWidth();
         const float e = newEnd / getLocalBounds().getWidth();
         valueTreeState.getParameter("duration")->setValueNotifyingHost(e - s);
     }
-    void setProcessorValues()
+    void changeReadpos(const float newPos)
     {
-        float dur2 = (end - start) / (getLocalBounds().getWidth() - 10);
-        const float readpos = (start - 5) / (getLocalBounds().getWidth() - 10);
+        end = end - start + newPos;
+        start = newPos;
+        const float rPos = newPos / getLocalBounds().getWidth();
+        valueTreeState.getParameter("readpos")->setValueNotifyingHost(rPos);
+    }
+    void changeInterval(const float interval)
+    {
+        const float tInterval = getLocalBounds().getHeight() - interval;
+        const float intervalP = tInterval / getLocalBounds().getHeight();
+        valueTreeState.getParameter("interval")->setValueNotifyingHost(intervalP);
+    }
+    void setProcessorValues(float e, float s)
+    {
+        float dur2 = (e - s) / (getLocalBounds().getWidth());
+        const float readpos = (s) / (getLocalBounds().getWidth());
         if (dur2 <= 0)
             dur2 = 0.001f;
 
@@ -67,20 +85,24 @@ public:
     }
     void resized() override
     {
-        events.setBounds(start, 0, end - start, getLocalBounds().getHeight());
+        events.setBounds(0, 0, getLocalBounds().getWidth(), getLocalBounds().getHeight());
         left.setBounds(start - 10, 0, 10, getLocalBounds().getHeight());
         right.setBounds(end, 0, 10, getLocalBounds().getHeight());
     }
 
     void timerCallback() override
     {
-        events.setInterval(getLocalBounds().getHeight() * valueTreeState.getParameter("interval")->getValue());
+        this->intervalY = getLocalBounds().getHeight() * valueTreeState.getParameter("interval")->getValue();
+        this->readpos = valueTreeState.getParameter("readpos")->getValue();
+        this->duration = valueTreeState.getParameter("duration")->getValue();
         const float s = getLocalBounds().getWidth() * valueTreeState.getParameter("readpos")->getValue();
         const float e = getLocalBounds().getWidth() * valueTreeState.getParameter("duration")->getValue();
-        events.setBounds(s, 0, e, getLocalBounds().getHeight());
-        // TODO try to just change position
+        events.setBounds(0, 0, getLocalBounds().getWidth(), getLocalBounds().getHeight());
+        events.setInterval();
+        selectableRange.setBounds(s, 0, e, getLocalBounds().getHeight());
         left.setBounds(s - 10, 0, 10, getLocalBounds().getHeight());
         right.setBounds(e + s, 0, 10, getLocalBounds().getHeight());
+        events.repaint();
     }
 
     void mouseUp(const juce::MouseEvent& event) override
@@ -93,18 +115,7 @@ public:
             valueTreeState.getParameter("readpos")->endChangeGesture();
             break;
         }
-        case STATE_MOVE:
-        {
-            valueTreeState.getParameter("readpos")->endChangeGesture();
-            break;
         }
-        case STATE_INTERVAL:
-        {
-            valueTreeState.getParameter("interval")->endChangeGesture();
-            break;
-        }
-        }
-        drag = 0;
     }
     void mouseDrag(const juce::MouseEvent& event) override
     {
@@ -113,80 +124,36 @@ public:
         case STATE_DRAG:
         {
             const float x = event.position.x;
+            float s = 0;
+            float e = 0;
             if (x < eventStart) {
-                start = x;
-                end = eventStart;
+                s = x;
+                e = eventStart;
             }
             else {
-                end = x;
-                start = eventStart;
+                e = x;
+                s = eventStart;
             }
-            if (start <= 5) {
-                start = 5;
-            }
-            if (end >= getLocalBounds().getWidth() - 5) {
-                end = getLocalBounds().getWidth() - 5;
-            }
-
-
-            diff = end - start;
-            setProcessorValues();
-            break;
-        }
-        case STATE_MOVE:
-        {
-            if (drag == 0) {
-                drag = event.position.x;
-            }
-            else {
-                start += event.position.x - drag;
-                end += event.position.x - drag;
-
-                if (start <= 5) {
-                    start = 5;
-                    end = start + diff;
-                }
-                if (end >= getLocalBounds().getWidth() - 5) {
-                    end = getLocalBounds().getWidth() - 5;
-                    start = getLocalBounds().getWidth() - diff - 5;
-                }
-                drag = event.position.x;
-            }
-            setProcessorValues();
-            break;
-        }
-        case STATE_INTERVAL:
-        {
-            if (drag == 0) {
-                drag = event.position.y;
-            }
-            else {
-                interval -= event.position.y - drag;
-                if (interval < 1) { interval = 1; }
-                if (interval > getLocalBounds().getHeight()) { interval = getLocalBounds().getHeight(); }
-                const float intervalP = (interval) / getLocalBounds().getHeight();
-                valueTreeState.getParameter("interval")->setValueNotifyingHost(intervalP);
-                drag = event.position.y;
-            }
+            setProcessorValues(e, s);
             break;
         }
         }
-        repaint();
     }
     void paint(juce::Graphics& g) override
     {
-
     }
-    void initialize()
-    {
-        auto range = valueTreeState.getParameter("interval")->getNormalisableRange();
 
-        interval = valueTreeState.getParameter("interval")->getValue() * getLocalBounds().getHeight();
-        start = valueTreeState.getParameter("readpos")->getValue() * getLocalBounds().getWidth() + 5;
-        end = start + valueTreeState.getParameter("duration")->getValue() * getLocalBounds().getWidth();
-        diff = end - start;
-        setProcessorValues();
-        repaint();
+    float getInterval()
+    {
+        return intervalY;
+    }
+    float getReadpos()
+    {
+        return readpos;
+    }
+    float getDuration()
+    {
+        return duration;
     }
 
 private:
@@ -195,18 +162,19 @@ private:
 
     AudioformHandle events;
 
-    PositionHandle left;
-    PositionHandle right;
+    juce::Rectangle<float> left;
+    juce::Rectangle<float> right;
 
-    enum state { STATE_DRAG, STATE_MOVE, STATE_INTERVAL } state;
+    juce::Rectangle<float> selectableRange;
+
+    enum state { STATE_DRAG, STATE_MOVE, STATE_INTERVAL, STATE_NONE, STATE_LEFT, STATE_RIGHT } state;
     float end;
     float start;
-    float interval;
-    float diff;
 
-    float handleX;
-    float handleY;
-    float drag;
+    float intervalY;
+    float readpos;
+    float duration;
+
     float eventStart;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioformEvents)
