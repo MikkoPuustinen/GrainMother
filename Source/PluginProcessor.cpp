@@ -26,9 +26,9 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
                                                         "Interval",             // parameter name
                                                         juce::NormalisableRange(0.5f, 1000.0f, 0.5f, 0.3f, false),  //range 
                                                         1.0f),                  // default value
-            std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,juce::NormalisableRange(0.0f, 1.0f) ,     0.250f ),
-            std::make_unique<juce::AudioParameterFloat>("panning"      ,"Panning"      , -1.0f  ,     1.0f ,     0.0f  ), 
-            std::make_unique<juce::AudioParameterFloat>("readpos"      ,"Readpos"      ,juce::NormalisableRange(0.0f, 1.0f) ,     0.250f ),
+            std::make_unique<juce::AudioParameterFloat>("duration"     ,"Duration"     ,  juce::NormalisableRange(0.0f, 1.0f)      ,     0.250f ),
+            std::make_unique<juce::AudioParameterFloat>("panning"      ,"Panning"      , -1.0f  ,     1.0f ,     0.0f  ),  
+            std::make_unique<juce::AudioParameterFloat>("readpos"      ,"Readpos"      ,  juce::NormalisableRange(0.0f, 1.0f)      ,     0.250f ),
             std::make_unique<juce::AudioParameterInt>  ("velocity"     ,"Velocity"     ,   -12  ,       12 ,     0     ),
             std::make_unique<juce::AudioParameterInt>  ("fineTune"     ,"FineTune"     , -100   ,     100  ,     0     ),
             std::make_unique<juce::AudioParameterFloat>("direction"    ,"Direction"    ,  0.0f  ,     1.0f ,     1.0f  ),
@@ -37,8 +37,11 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
             std::make_unique<juce::AudioParameterFloat>("panningRand"  ,"PanningRand"  ,  0.0f  ,     1.0f ,     0.0f  ),
             std::make_unique<juce::AudioParameterFloat>("readposRand"  ,"ReadposRand"  ,  0.0f  ,     1.0f ,     0.5f  ),
             std::make_unique<juce::AudioParameterFloat>("velocityRand" ,"VelocityRand" ,  0.0f  ,     1.0f ,     0.0f  ),
-            std::make_unique<juce::AudioParameterFloat>("volume"       ,"Volume"       ,  0.0f  ,     1.0f ,     0.5f  )
+            std::make_unique<juce::AudioParameterFloat>("volume"       ,"Volume"       ,  0.0f  ,     1.0f ,     0.5f  ),
+            std::make_unique<juce::AudioParameterFloat>("filterFreq"   ,"FilterFreq"   ,  juce::NormalisableRange(20.0f, 20000.0f, 1.0f, 0.3f, false) ,     100.0f ),
+            std::make_unique<juce::AudioParameterFloat>("resonance"    ,"Resonance"    ,  juce::NormalisableRange(0.1f , 1.0f    ) ,     0.1f   ),
         })
+        , lowPassFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.0f, 0.1))
 #endif
 {
     intervalParameter = parameters.getRawParameterValue("interval");
@@ -56,6 +59,9 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
     velocityRandParameter = parameters.getRawParameterValue("velocityRand");
 
     masterVolumeParameter = parameters.getRawParameterValue("volume");
+
+    filterFreq = parameters.getRawParameterValue("filterFreq");
+    resonance = parameters.getRawParameterValue("resonance");
 
     parameters.addParameterListener("interval", this);
     parameters.addParameterListener("duration", this);
@@ -260,10 +266,19 @@ void GrainMotherAudioProcessor::prepareToPlay(double sampleRate, int samplesPerB
     loadAudioFile(file);
 
     previousGain = *masterVolumeParameter;
+    lastSampleRate = sampleRate;
 
     setDirection(parameters.getParameter("direction")->getValue());
     setReadposRand(parameters.getParameter("readposRand")->getValue());
     setPanningRand(parameters.getParameter("panningRand")->getValue());
+
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getTotalNumOutputChannels();
+
+    lowPassFilter.prepare(spec);
+    lowPassFilter.reset();
 }
 
 void GrainMotherAudioProcessor::releaseResources()
@@ -326,6 +341,15 @@ void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     }
 
     puroEngine.processBlock(buffer, activeNotes);
+
+    juce::dsp::AudioBlock <float> block(buffer);
+
+    float freq = *parameters.getRawParameterValue("filterFreq");
+    float res = *parameters.getRawParameterValue("resonance");
+
+    *lowPassFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq, res);
+
+    lowPassFilter.process(juce::dsp::ProcessContextReplacing<float>(block));
 
     auto output = (float)*masterVolumeParameter;
     if (output == previousGain)

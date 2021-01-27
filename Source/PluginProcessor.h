@@ -82,7 +82,14 @@ private:
 
     juce::AudioProcessorValueTreeState parameters;
 
+    float lastSampleRate;
+
     int activeMidiNotes[128] = { 0 };
+
+    juce::dsp::ProcessorDuplicator <juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients <float>> lowPassFilter;
+
+    std::atomic<float>* filterFreq = nullptr;
+    std::atomic<float>* resonance  = nullptr;
 
     std::atomic<float>* intervalParameter = nullptr;
     std::atomic<float>* durationParameter = nullptr;

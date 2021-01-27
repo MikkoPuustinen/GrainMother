@@ -184,6 +184,11 @@ private:
     juce::Slider velocitySlider;
     juce::Slider directionSlider;
 
+    juce::Slider resonanceSlider;
+    juce::Slider filterFreqSlider;
+    std::unique_ptr<SliderAttachment> resonanceAttachment;
+    std::unique_ptr<SliderAttachment> filterFreqAttachment;
+
     juce::Slider fineTuneSlider;
     std::unique_ptr<SliderAttachment> fineTuneAttachment;
     juce::Slider outputSlider;

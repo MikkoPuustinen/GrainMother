@@ -37,6 +37,15 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     header.setJustificationType(juce::Justification::centred);
     header.setFont(juce::Font(80.0f));
     // Sliders
+    resonanceSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    resonanceSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
+    addAndMakeVisible(resonanceSlider);
+    resonanceAttachment.reset(new SliderAttachment(valueTreeState, "resonance", resonanceSlider));
+
+    filterFreqSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    filterFreqSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
+    addAndMakeVisible(filterFreqSlider);
+    filterFreqAttachment.reset(new SliderAttachment(valueTreeState, "filterFreq", filterFreqSlider));
 
     velocitySlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     velocitySlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
@@ -181,14 +190,21 @@ void GrainMotherAudioProcessorEditor::resized()
 
     tuneLabel.setBounds(70, sliderPStartY - 30, 100, 40);
     juce::FlexBox leftP;
+    juce::FlexBox rightP;
     juce::Rectangle<int> leftPBounds(70, sliderPStartY, 100, 130);
+    juce::Rectangle<int> rightPBounds(getWidth() - 170, sliderPStartY, 100, 130);
     
     leftP.flexDirection = juce::FlexBox::Direction::row;
+    rightP.flexDirection = juce::FlexBox::Direction::row;
 
     leftP.items.add(juce::FlexItem(velocitySlider).withFlex(0, 1, 100));
+    rightP.items.add(juce::FlexItem(filterFreqSlider).withFlex(0, 1, 100));
 
     leftP.performLayout(leftPBounds);
+    rightP.performLayout(rightPBounds);
     fineTuneSlider.setBounds(40, getHeight() - 180, 60, 80);
+    resonanceSlider.setBounds(getWidth() - 100, getHeight() - 180, 60, 80);
+
     juce::Rectangle<int> thumbnailBounds(50, 80, getWidth() - 100, 300);
     audioformComponent.setBounds(thumbnailBounds);
     juce::Rectangle<int> eventBounds(50 - 4, 80, getWidth() - 92, 300);
