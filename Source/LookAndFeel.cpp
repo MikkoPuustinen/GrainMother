@@ -155,7 +155,14 @@ Label* GrainMotherSliderLookAndFeel::createSliderTextBox(Slider& slider)
     l->setColour(TextEditor::highlightColourId, slider.findColour(Slider::backgroundColourId));
     l->setColour(TextEditor::textColourId, slider.findColour(Slider::textBoxTextColourId));
     l->setColour(Label::textWhenEditingColourId, slider.findColour(Slider::textBoxTextColourId));
-    l->setFont(24.0f);
+    if (slider.getName() == "resonance" || slider.getName() == "filterFreq")
+    {
+        l->setFont(20.0f);
+    }
+    else {
+        l->setFont(24.0f);
+    }
+    
     return l;
 }
 

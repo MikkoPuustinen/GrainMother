@@ -69,6 +69,8 @@ public:
     void setPanningRand(float panning);
     void setReadposRand(float readpos);
     void setVelocityRand(float velocity);
+    void updateFilterGraph();
+    void updateFilterPath(juce::Path& p, juce::Rectangle<int> b, double pixels);
     int getGrainNum();
     puro::AlignedPool<Grain> getGrainPool();
     float getMaximumPosition();
@@ -85,6 +87,10 @@ private:
     float lastSampleRate;
 
     int activeMidiNotes[128] = { 0 };
+
+    juce::dsp::IIR::Coefficients<float>::Ptr coefficients;
+    std::vector<double> magnitudes;
+    std::vector<double> frequencies;
 
     juce::dsp::ProcessorDuplicator <juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients <float>> lowPassFilter;
 

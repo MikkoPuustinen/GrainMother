@@ -39,11 +39,16 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
             std::make_unique<juce::AudioParameterFloat>("velocityRand" ,"VelocityRand" ,  0.0f  ,     1.0f ,     0.0f  ),
             std::make_unique<juce::AudioParameterFloat>("volume"       ,"Volume"       ,  0.0f  ,     1.0f ,     0.5f  ),
             std::make_unique<juce::AudioParameterFloat>("filterFreq"   ,"FilterFreq"   ,  juce::NormalisableRange(20.0f, 20000.0f, 1.0f, 0.3f, false) ,     100.0f ),
-            std::make_unique<juce::AudioParameterFloat>("resonance"    ,"Resonance"    ,  juce::NormalisableRange(0.1f , 1.0f    ) ,     0.1f   ),
+            std::make_unique<juce::AudioParameterFloat>("resonance"    ,"Resonance"    ,  juce::NormalisableRange(0.1f , 1.0f, 0.005f    ) ,     0.1f   ),
         })
-        , lowPassFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.0f, 0.1))
+        , lowPassFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 10000.0f, 0.1)), coefficients(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 10000.0f, 0.1))
 #endif
 {
+    frequencies.resize(300);
+    for (size_t i = 0; i < frequencies.size(); ++i) {
+        frequencies[i] = 20.0 * std::pow(2.0, i / 30.0);
+    }
+    magnitudes.resize(300);
     intervalParameter = parameters.getRawParameterValue("interval");
     durationParameter = parameters.getRawParameterValue("duration");
     panningParameter = parameters.getRawParameterValue("panning");
@@ -77,6 +82,8 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
     parameters.addParameterListener("panningRand", this);
     parameters.addParameterListener("readposRand", this);
     parameters.addParameterListener("velocityRand", this);
+    parameters.addParameterListener("filterFreq", this);
+    parameters.addParameterListener("resonance", this);
 
     filePath = parameters.state.getPropertyAsValue("AUDIO_FILEPATH", nullptr, true);
 }
@@ -95,6 +102,8 @@ GrainMotherAudioProcessor::~GrainMotherAudioProcessor()
     parameters.removeParameterListener("panningRand", this);
     parameters.removeParameterListener("readposRand", this);
     parameters.removeParameterListener("velocityRand", this);
+    parameters.removeParameterListener("filterFreq", this);
+    parameters.removeParameterListener("resonance", this);
 }
 
 void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
@@ -124,6 +133,10 @@ void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID
         setReadposRand(newValue);
     } else if (parameterID == "velocityRand") {
         setVelocityRand(newValue);
+    } else if (parameterID == "filterFreq") {
+        updateFilterGraph();
+    } else if (parameterID == "resonance") {
+        updateFilterGraph();
     }
 }
 
@@ -185,6 +198,24 @@ void GrainMotherAudioProcessor::setVelocityRand(float velocity)
 {
     puroEngine.velocityParam.deviation = (float)velocity;
 }
+
+void GrainMotherAudioProcessor::updateFilterGraph()
+{
+    if (coefficients)
+        coefficients->getMagnitudeForFrequencyArray(frequencies.data(), magnitudes.data(), frequencies.size(), this->getSampleRate());
+}
+
+void GrainMotherAudioProcessor::updateFilterPath(juce::Path& p, juce::Rectangle<int> b, double pixels)
+{
+    p.startNewSubPath(b.getX(), magnitudes[0] > 0 ? b.getCentreY() - pixels * std::log(magnitudes[0]) / std::log(2) : b.getBottom());
+    const double xStep = static_cast<double> (b.getWidth()) / frequencies.size();
+    for (size_t i = 1; i < frequencies.size(); ++i)
+    {
+        p.lineTo(float(b.getX() + i * xStep),
+            float(magnitudes[i] > 0 ? b.getCentreY() - pixels * std::log(magnitudes[i]) / std::log(2) : b.getBottom()));
+    }
+}
+
 
 //==============================================================================
 const juce::String GrainMotherAudioProcessor::getName() const
@@ -279,6 +310,13 @@ void GrainMotherAudioProcessor::prepareToPlay(double sampleRate, int samplesPerB
 
     lowPassFilter.prepare(spec);
     lowPassFilter.reset();
+
+    updateFilterGraph();
+    float freq = *parameters.getRawParameterValue("filterFreq");
+    float res = *parameters.getRawParameterValue("resonance");
+
+    coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, freq, res);
+
 }
 
 void GrainMotherAudioProcessor::releaseResources()
@@ -347,7 +385,9 @@ void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     float freq = *parameters.getRawParameterValue("filterFreq");
     float res = *parameters.getRawParameterValue("resonance");
 
-    *lowPassFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq, res);
+    coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq, res);;
+
+    *lowPassFilter.state = *coefficients; //*juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq, res);
 
     lowPassFilter.process(juce::dsp::ProcessContextReplacing<float>(block));
 
@@ -398,6 +438,11 @@ void GrainMotherAudioProcessor::setStateInformation (const void* data, int sizeI
             filePath.referTo(parameters.state.getPropertyAsValue("AUDIO_FILEPATH", nullptr, true));
             loadAudioFile(juce::File(filePath.getValue()));
         }
+    float freq = *parameters.getRawParameterValue("filterFreq");
+    float res = *parameters.getRawParameterValue("resonance");
+
+    coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(this->getSampleRate(), freq, res);
+    updateFilterGraph();
 }
 
 //==============================================================================

@@ -12,6 +12,7 @@
 #include "PluginProcessor.h"
 #include "LookAndFeel.h"
 #include "AudioFormEvents.h"
+#include "FilterGraph.h"
 
 //==============================================================================
 /**
@@ -209,12 +210,16 @@ private:
     juce::Label randomReadposLabel;
     juce::Label outputLabel;
 
+    juce::Label cutoffLabel;
+    juce::Label resonanceLabel;
+
     juce::Label header;
 
     juce::AudioFormatManager formatManager;
 
     juce::AudioThumbnailCache thumbnailCache;
 
+    FilterGraph filterGraph;
     AudioformComponent audioformComponent;
     AudioformEvents audioformEvents;
     GrainVisualizer grainVisualizer;

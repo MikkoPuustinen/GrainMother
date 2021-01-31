@@ -19,13 +19,16 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     , audioformComponent(1024, formatManager, thumbnailCache, p)
     , audioformEvents(p, vts)
     , grainVisualizer(p, vts)
+    , filterGraph(p, vts)
     , draggingFiles(false)
 {
+    resonanceSlider.setName("resonance");
+    filterFreqSlider.setName("filterFreq");
     setOpaque(true);
     juce::LookAndFeel::setDefaultLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
     formatManager.registerBasicFormats();
     addAndMakeVisible(&audioformComponent);
-    
+    addAndMakeVisible(&filterGraph);
     addAndMakeVisible(&audioformEvents);
     addAndMakeVisible(&grainVisualizer);
     grainVisualizer.setInterceptsMouseClicks(false, false);
@@ -81,6 +84,8 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     addAndMakeVisible(readposRandSlider);
     readposRandAttachment.reset(new SliderAttachment(valueTreeState, "readposRand", readposRandSlider));
 
+
+
     // Labels 
     tuneLabel.setText("tune", juce::dontSendNotification);
 
@@ -88,6 +93,12 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     randomPanningLabel.setText("width", juce::dontSendNotification);
     randomReadposLabel.setText("scatter", juce::dontSendNotification);
     directionLabel.setText("direction", juce::dontSendNotification);
+
+    cutoffLabel.setText("cutoff", juce::dontSendNotification);
+    resonanceLabel.setText("resonance", juce::dontSendNotification);
+
+    cutoffLabel.setJustificationType(juce::Justification::centred);
+    resonanceLabel.setJustificationType(juce::Justification::centred);
 
     tuneLabel.setJustificationType(juce::Justification::centred);
     outputLabel.setJustificationType(juce::Justification::centred);
@@ -105,6 +116,8 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     addAndMakeVisible(randomReadposLabel);
     addAndMakeVisible(directionLabel);
     addAndMakeVisible(tuneLabel);
+    addAndMakeVisible(cutoffLabel);
+    addAndMakeVisible(resonanceLabel);
 
     juce::File file(audioProcessor.filePath.getValue());
     audioformComponent.setFile(file);
@@ -128,15 +141,16 @@ void GrainMotherAudioProcessorEditor::paint(juce::Graphics& g)
     juce::Path uiPath;
     const float curve = 10;
     //uiPath.startNewSubPath(0, getHeight());
+    const int startCurve = 160;
     uiPath.startNewSubPath(0, getHeight() - 75);
-    uiPath.lineTo(150 - curve, getHeight() - 75);
-    uiPath.quadraticTo(150 + curve * 0.1f, getHeight() - (75 + curve * 0.1f), 150 + curve * 0.5f, getHeight() - (75 + curve));
+    uiPath.lineTo(startCurve - curve, getHeight() - 75);
+    uiPath.quadraticTo(startCurve + curve * 0.1f, getHeight() - (75 + curve * 0.1f), startCurve + curve * 0.5f, getHeight() - (75 + curve));
     uiPath.lineTo(225, sliderPStartY + curve);
     uiPath.quadraticTo(225 + (curve * 0.5f), sliderPStartY - (curve * 0.1f), 225 + curve * 1.5f, sliderPStartY);
     uiPath.lineTo(getWidth() - 225 - curve * 1.5f, sliderPStartY);
     uiPath.quadraticTo(getWidth() - 225 - (curve * 0.5f), sliderPStartY - (curve * 0.1f), getWidth() - 225, sliderPStartY + curve);
-    uiPath.lineTo(getWidth() - 150 - curve * 0.5f, getHeight() - 75 - curve);
-    uiPath.quadraticTo(getWidth() - 150 + (curve * 0.1f), getHeight() - (75 - curve * 0.1f), getWidth() - 150 + curve, getHeight() - 75);
+    uiPath.lineTo(getWidth() - startCurve - curve * 0.5f, getHeight() - 75 - curve);
+    uiPath.quadraticTo(getWidth() - startCurve + (curve * 0.1f), getHeight() - (75 - curve * 0.1f), getWidth() - startCurve + curve, getHeight() - 75);
     uiPath.lineTo(getWidth(), getHeight() - 75);
     //uiPath.lineTo(getWidth(), getHeight());
     //uiPath.closeSubPath();
@@ -191,19 +205,28 @@ void GrainMotherAudioProcessorEditor::resized()
     tuneLabel.setBounds(70, sliderPStartY - 30, 100, 40);
     juce::FlexBox leftP;
     juce::FlexBox rightP;
+    juce::FlexBox rightPLabels;
     juce::Rectangle<int> leftPBounds(70, sliderPStartY, 100, 130);
-    juce::Rectangle<int> rightPBounds(getWidth() - 170, sliderPStartY, 100, 130);
-    
+    juce::Rectangle<int> rightPBounds(getWidth() - 150, getHeight() - 180, 120, 80);
+    juce::Rectangle<int> rightPLabelBounds(getWidth() - 150, getHeight() - 200, 120, 20);
     leftP.flexDirection = juce::FlexBox::Direction::row;
     rightP.flexDirection = juce::FlexBox::Direction::row;
+    rightPLabels.flexDirection = juce::FlexBox::Direction::row;
 
+    rightP.items.add(juce::FlexItem(filterFreqSlider).withFlex(0, 1, 50));
+    rightP.items.add(juce::FlexItem(resonanceSlider).withFlex(0, 1, 50));
     leftP.items.add(juce::FlexItem(velocitySlider).withFlex(0, 1, 100));
-    rightP.items.add(juce::FlexItem(filterFreqSlider).withFlex(0, 1, 100));
 
+    rightP.justifyContent = (juce::FlexBox::JustifyContent::spaceBetween);
+    rightPLabels.justifyContent = (juce::FlexBox::JustifyContent::spaceBetween);
+
+    rightPLabels.items.add(juce::FlexItem(cutoffLabel).withFlex(0, 1, 50));
+    rightPLabels.items.add(juce::FlexItem(resonanceLabel).withFlex(0, 1, 60));
     leftP.performLayout(leftPBounds);
     rightP.performLayout(rightPBounds);
+    rightPLabels.performLayout(rightPLabelBounds);
     fineTuneSlider.setBounds(40, getHeight() - 180, 60, 80);
-    resonanceSlider.setBounds(getWidth() - 100, getHeight() - 180, 60, 80);
+    //resonanceSlider.setBounds(getWidth() - 100, getHeight() - 180, 60, 80);
 
     juce::Rectangle<int> thumbnailBounds(50, 80, getWidth() - 100, 300);
     audioformComponent.setBounds(thumbnailBounds);
@@ -211,6 +234,8 @@ void GrainMotherAudioProcessorEditor::resized()
     audioformEvents.setBounds(eventBounds);
 
     grainVisualizer.setBounds(thumbnailBounds);
+
+    filterGraph.setBounds(getWidth() - 170, sliderPStartY, 150, 120);
 
     audioFileDialogButton.setBounds({ getWidth() - 90, thumbnailBounds.getY(), 50, 50 });
 

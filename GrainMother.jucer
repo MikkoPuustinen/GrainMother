@@ -36,6 +36,8 @@
       <FILE id="dV2xT2" name="utility.hpp" compile="0" resource="0" file="puro/src/utility.hpp"/>
     </GROUP>
     <GROUP id="{7D3C0223-817A-9626-D2F9-1C41FFCF1710}" name="Source">
+      <FILE id="qvOrrA" name="FilterGraph.cpp" compile="1" resource="0" file="Source/FilterGraph.cpp"/>
+      <FILE id="cL0PWY" name="FilterGraph.h" compile="0" resource="0" file="Source/FilterGraph.h"/>
       <FILE id="UlsvFG" name="AudioFormEvents.h" compile="0" resource="0"
             file="Source/AudioFormEvents.h"/>
       <FILE id="VVp912" name="AudioFormHandle.cpp" compile="1" resource="0"
