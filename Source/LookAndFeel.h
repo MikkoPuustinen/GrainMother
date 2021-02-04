@@ -10,6 +10,8 @@ public:
 
 	juce::Typeface::Ptr getTypefaceForFont(const juce::Font& f) override;
 
+	void drawComboBox(juce::Graphics&, int width, int height, bool isButtonDown, int buttonX, int buttonY, int buttonW, int buttonH, juce::ComboBox&);
+
 	void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
 		const float rotaryStartAngle, const float rotaryEndAngle, ::juce::Slider& slider) override;
 

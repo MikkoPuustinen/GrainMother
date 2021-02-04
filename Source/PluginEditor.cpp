@@ -85,7 +85,12 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     readposRandAttachment.reset(new SliderAttachment(valueTreeState, "readposRand", readposRandSlider));
 
 
-
+    filterCombo.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
+    filterCombo.addItem("lp"  , 1);
+    filterCombo.addItem("hp", 2);
+    filterCombo.addItem("bp", 3);
+    filterComboAttachment.reset(new ComboBoxAttachment(valueTreeState, "filterType", filterCombo));
+    addAndMakeVisible(filterCombo);
     // Labels 
     tuneLabel.setText("tune", juce::dontSendNotification);
 
@@ -227,6 +232,7 @@ void GrainMotherAudioProcessorEditor::resized()
     rightPLabels.performLayout(rightPLabelBounds);
     fineTuneSlider.setBounds(40, getHeight() - 180, 60, 80);
     //resonanceSlider.setBounds(getWidth() - 100, getHeight() - 180, 60, 80);
+    filterCombo.setBounds(getWidth() - 80, sliderPStartY - 40, 70, 25);
 
     juce::Rectangle<int> thumbnailBounds(50, 80, getWidth() - 100, 300);
     audioformComponent.setBounds(thumbnailBounds);

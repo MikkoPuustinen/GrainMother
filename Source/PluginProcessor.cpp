@@ -40,6 +40,7 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
             std::make_unique<juce::AudioParameterFloat>("volume"       ,"Volume"       ,  0.0f  ,     1.0f ,     0.5f  ),
             std::make_unique<juce::AudioParameterFloat>("filterFreq"   ,"FilterFreq"   ,  juce::NormalisableRange(20.0f, 20000.0f, 1.0f, 0.3f, false) ,     100.0f ),
             std::make_unique<juce::AudioParameterFloat>("resonance"    ,"Resonance"    ,  juce::NormalisableRange(0.1f , 1.0f, 0.005f    ) ,     0.1f   ),
+            std::make_unique<juce::AudioParameterInt>  ("filterType"   ,"filterType"   ,  0     ,     3 ,        0 ),
         })
         , lowPassFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 10000.0f, 0.1)), coefficients(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 10000.0f, 0.1))
 #endif
@@ -84,6 +85,7 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
     parameters.addParameterListener("velocityRand", this);
     parameters.addParameterListener("filterFreq", this);
     parameters.addParameterListener("resonance", this);
+    parameters.addParameterListener("filterType", this);
 
     filePath = parameters.state.getPropertyAsValue("AUDIO_FILEPATH", nullptr, true);
 }
@@ -104,6 +106,7 @@ GrainMotherAudioProcessor::~GrainMotherAudioProcessor()
     parameters.removeParameterListener("velocityRand", this);
     parameters.removeParameterListener("filterFreq", this);
     parameters.removeParameterListener("resonance", this);
+    parameters.removeParameterListener("filterType", this);
 }
 
 void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
@@ -137,6 +140,8 @@ void GrainMotherAudioProcessor::parameterChanged(const juce::String& parameterID
         updateFilterGraph();
     } else if (parameterID == "resonance") {
         updateFilterGraph();
+    } else if (parameterID == "filterType") {
+        shouldUpdateFilter = true;
     }
 }
 
@@ -207,6 +212,11 @@ void GrainMotherAudioProcessor::updateFilterGraph()
 
 void GrainMotherAudioProcessor::updateFilterPath(juce::Path& p, juce::Rectangle<int> b, double pixels)
 {
+    if (shouldUpdateFilter) {
+        updateFilterGraph();
+        shouldUpdateFilter = false;
+    }
+
     p.startNewSubPath(b.getX(), magnitudes[0] > 0 ? b.getCentreY() - pixels * std::log(magnitudes[0]) / std::log(2) : b.getBottom());
     const double xStep = static_cast<double> (b.getWidth()) / frequencies.size();
     for (size_t i = 1; i < frequencies.size(); ++i)
@@ -310,12 +320,13 @@ void GrainMotherAudioProcessor::prepareToPlay(double sampleRate, int samplesPerB
 
     lowPassFilter.prepare(spec);
     lowPassFilter.reset();
-
+    //updateFilter();
     updateFilterGraph();
+
     float freq = *parameters.getRawParameterValue("filterFreq");
     float res = *parameters.getRawParameterValue("resonance");
 
-    coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, freq, res);
+    //coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, freq, res);
 
 }
 
@@ -348,6 +359,31 @@ bool GrainMotherAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
   #endif
 }
 #endif
+
+void GrainMotherAudioProcessor::updateFilter()
+{
+    int type = *parameters.getRawParameterValue("filterType");
+    float freq = *parameters.getRawParameterValue("filterFreq");
+    float res = *parameters.getRawParameterValue("resonance");
+    switch (type)
+    {
+    case 0:
+    {
+        coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq, res);
+        break;
+    }
+    case 2:
+    {
+        coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, freq, res);
+        break;
+    }
+    case 3:
+    {
+        coefficients = *juce::dsp::IIR::Coefficients<float>::makeBandPass(lastSampleRate, freq, res);
+        break;
+    }
+    }
+}
 
 void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
@@ -382,12 +418,10 @@ void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     juce::dsp::AudioBlock <float> block(buffer);
 
-    float freq = *parameters.getRawParameterValue("filterFreq");
-    float res = *parameters.getRawParameterValue("resonance");
 
-    coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq, res);;
+    updateFilter();
 
-    *lowPassFilter.state = *coefficients; //*juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq, res);
+    *lowPassFilter.state = *coefficients;
 
     lowPassFilter.process(juce::dsp::ProcessContextReplacing<float>(block));
 
@@ -442,6 +476,7 @@ void GrainMotherAudioProcessor::setStateInformation (const void* data, int sizeI
     float res = *parameters.getRawParameterValue("resonance");
 
     coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(this->getSampleRate(), freq, res);
+    //updateFilter();
     updateFilterGraph();
 }
 

@@ -17,6 +17,12 @@ GrainMotherSliderLookAndFeel::GrainMotherSliderLookAndFeel()
     setColour(juce::Label::textColourId, juce::Colour(51, 51, 51));
     setColour(juce::TextButton::buttonColourId, juce::Colour(51, 51, 51));
     setColour(juce::TextButton::buttonOnColourId, juce::Colour(230, 57, 70));
+    setColour(juce::ComboBox::textColourId, juce::Colour(51, 51, 51));
+    setColour(juce::ComboBox::backgroundColourId, juce::Colour(246, 244, 243));
+    setColour(juce::ComboBox::focusedOutlineColourId, juce::Colour(246, 244, 243));
+    setColour(juce::ComboBox::outlineColourId, juce::Colour(246, 244, 243));
+    setColour(juce::PopupMenu::backgroundColourId, juce::Colour(246, 244, 243));
+    setColour(juce::PopupMenu::textColourId, juce::Colour(51, 51, 51));
 
 }
 
@@ -31,6 +37,27 @@ Typeface::Ptr GrainMotherSliderLookAndFeel::getTypefaceForFont(const Font& f)
     static Typeface::Ptr myFont = Typeface::createSystemTypefaceFor(BinaryData::ComfortaaLight_ttf,
         BinaryData::ComfortaaLight_ttfSize);
     return myFont;
+}
+
+void GrainMotherSliderLookAndFeel::drawComboBox(juce::Graphics& g, int width, int height, bool isButtonDown, int buttonX, int buttonY, int buttonW, int buttonH, juce::ComboBox& box)
+{
+    auto cornerSize = box.findParentComponentOfClass<ChoicePropertyComponent>() != nullptr ? 0.0f : 3.0f;
+    Rectangle<int> boxBounds(0, 0, width, height);
+
+    g.setColour(box.findColour(Slider::backgroundColourId));
+    g.fillRoundedRectangle(boxBounds.toFloat(), cornerSize);
+
+    g.setColour(box.findColour(Slider::backgroundColourId));
+    g.drawRoundedRectangle(boxBounds.toFloat().reduced(0.5f, 0.5f), cornerSize, 1.0f);
+
+    Rectangle<int> arrowZone(width - 30, 0, 20, height);
+    Path path;
+    path.startNewSubPath((float)arrowZone.getX() + 3.0f, (float)arrowZone.getCentreY() - 2.0f);
+    path.lineTo((float)arrowZone.getCentreX(), (float)arrowZone.getCentreY() + 3.0f);
+    path.lineTo((float)arrowZone.getRight() - 3.0f, (float)arrowZone.getCentreY() - 2.0f);
+
+    g.setColour(box.findColour(ComboBox::textColourId).withAlpha((box.isEnabled() ? 0.9f : 0.2f)));
+    g.strokePath(path, PathStrokeType(2.0f));
 }
 
 void GrainMotherSliderLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos,

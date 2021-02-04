@@ -155,6 +155,7 @@ class GrainMotherAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
     typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
+    typedef juce::AudioProcessorValueTreeState::ComboBoxAttachment ComboBoxAttachment;
     GrainMotherAudioProcessorEditor (GrainMotherAudioProcessor&, juce::AudioProcessorValueTreeState&);
     ~GrainMotherAudioProcessorEditor() override;
 
@@ -203,6 +204,9 @@ private:
 
     std::unique_ptr<SliderAttachment> panningRandAttachment;
     std::unique_ptr<SliderAttachment> readposRandAttachment;
+
+    juce::ComboBox filterCombo;
+    std::unique_ptr<ComboBoxAttachment> filterComboAttachment;
 
     juce::Label tuneLabel;
     juce::Label directionLabel;

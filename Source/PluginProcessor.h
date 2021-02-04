@@ -72,6 +72,7 @@ public:
     void updateFilterGraph();
     void updateFilterPath(juce::Path& p, juce::Rectangle<int> b, double pixels);
     int getGrainNum();
+    void updateFilter();
     puro::AlignedPool<Grain> getGrainPool();
     float getMaximumPosition();
     float getMaximumSampleCount();
@@ -85,6 +86,7 @@ private:
     juce::AudioProcessorValueTreeState parameters;
 
     float lastSampleRate;
+    bool shouldUpdateFilter;
 
     int activeMidiNotes[128] = { 0 };
 
@@ -112,6 +114,8 @@ private:
     std::atomic<float>* panningRandParameter = nullptr;
     std::atomic<float>* readposRandParameter = nullptr;
     std::atomic<float>* velocityRandParameter = nullptr;
+
+    std::atomic<float>* filterType = nullptr;
 
     std::atomic<float>* masterVolumeParameter = nullptr;
 
