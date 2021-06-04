@@ -8,9 +8,9 @@ FilterGraph::FilterGraph(GrainMotherAudioProcessor& p, juce::AudioProcessorValue
 void FilterGraph::paint(juce::Graphics& g)
 {
 	//g.fillAll(juce::Colour(0, 255, 0));
-	g.setColour(juce::Colour(51, 51, juce::uint8(51), juce::uint8(128)));
-	g.fillRect(getWidth() / 2,  0, 1, getHeight());
-	g.fillRect(0, getHeight() / 2, getLocalBounds().getWidth(), 1);
+	//g.setColour(juce::Colour(51, 51, juce::uint8(51), juce::uint8(128)));
+	//g.fillRect(getWidth() / 2,  0, 1, getHeight());
+	//g.fillRect(0, getHeight() / 2, getLocalBounds().getWidth(), 1);
 	//g.fillEllipse(freq * getWidth(), getHeight() * 0.5f - (resonance * getHeight() * 0.5f), 8, 8);
 
 	g.strokePath(frequencyResponse, juce::PathStrokeType(2.0f));
@@ -18,15 +18,18 @@ void FilterGraph::paint(juce::Graphics& g)
 	juce::Path p1, p2;
 	p1.addPath(frequencyResponse);
 	auto endX = p1.getCurrentPosition().getX();
-	p1.lineTo(p1.getCurrentPosition().getX(), getBottom());
-	p1.lineTo(0, getBottom());
-	p1.closeSubPath();
+	// draw the graph
 	juce::FillType fillType = juce::FillType();
 	fillType.setColour(juce::Colour(51, 51, 51));
 	g.setFillType(fillType);
 	g.setColour(juce::Colour(51, 51, 51));
 	g.strokePath(p1, juce::PathStrokeType(2));
 
+	// fill area below graph
+	p1.lineTo(p1.getCurrentPosition().getX(), getBottom());
+	p1.lineTo(-5, getBottom());
+	p1.lineTo(-5, getHeight() * 0.5f);
+	p1.closeSubPath();
 	fillType.setColour(juce::Colour(255, 105, juce::uint8(128), juce::uint8(128)));
 	g.setFillType(fillType);
 	g.fillPath(p1);
