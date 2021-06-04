@@ -36,14 +36,14 @@
       <FILE id="dV2xT2" name="utility.hpp" compile="0" resource="0" file="puro/src/utility.hpp"/>
     </GROUP>
     <GROUP id="{7D3C0223-817A-9626-D2F9-1C41FFCF1710}" name="Source">
-      <FILE id="qvOrrA" name="FilterGraph.cpp" compile="1" resource="0" file="Source/FilterGraph.cpp"/>
-      <FILE id="cL0PWY" name="FilterGraph.h" compile="0" resource="0" file="Source/FilterGraph.h"/>
-      <FILE id="UlsvFG" name="AudioFormEvents.h" compile="0" resource="0"
+      <FILE id="a7khus" name="AudioFormEvents.h" compile="0" resource="0"
             file="Source/AudioFormEvents.h"/>
-      <FILE id="VVp912" name="AudioFormHandle.cpp" compile="1" resource="0"
+      <FILE id="KOV2P3" name="AudioFormHandle.cpp" compile="1" resource="0"
             file="Source/AudioFormHandle.cpp"/>
-      <FILE id="N6AGVQ" name="AudioFormHandle.h" compile="0" resource="0"
+      <FILE id="oxIZau" name="AudioFormHandle.h" compile="0" resource="0"
             file="Source/AudioFormHandle.h"/>
+      <FILE id="KQmEfR" name="FilterGraph.cpp" compile="1" resource="0" file="Source/FilterGraph.cpp"/>
+      <FILE id="nWEA7Q" name="FilterGraph.h" compile="0" resource="0" file="Source/FilterGraph.h"/>
       <FILE id="dXBxZ5" name="LookAndFeel.cpp" compile="1" resource="0" file="Source/LookAndFeel.cpp"/>
       <FILE id="NFBEz4" name="LookAndFeel.h" compile="0" resource="0" file="Source/LookAndFeel.h"/>
       <FILE id="khdxXQ" name="PuroEngine.h" compile="0" resource="0" file="Source/PuroEngine.h"/>
@@ -76,7 +76,7 @@
         <MODULEPATH id="juce_graphics" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_dsp" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../Downloads/Juce/JUCE/modules"/>
       </MODULEPATHS>
     </VS2019>
     <XCODE_IPHONE targetFolder="Builds/iOS">
@@ -97,7 +97,7 @@
         <MODULEPATH id="juce_graphics" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_dsp" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../Downloads/Juce/JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_IPHONE>
     <XCODE_MAC targetFolder="Builds/MacOSX">
@@ -118,7 +118,7 @@
         <MODULEPATH id="juce_graphics" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_dsp" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../Downloads/Juce/JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>

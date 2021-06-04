@@ -86,9 +86,10 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
 
 
     filterCombo.setLookAndFeel(&GrainMotherSliderLookAndFeel::getInstance());
-    filterCombo.addItem("lp"  , 1);
-    filterCombo.addItem("hp", 2);
-    filterCombo.addItem("bp", 3);
+    filterCombo.addItem("no filter", 1);
+    filterCombo.addItem("lp", 2);
+    filterCombo.addItem("hp", 3);
+    filterCombo.addItem("bp", 4);
     filterComboAttachment.reset(new ComboBoxAttachment(valueTreeState, "filterType", filterCombo));
     addAndMakeVisible(filterCombo);
     // Labels 

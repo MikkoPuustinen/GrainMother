@@ -11,7 +11,7 @@ void FilterGraph::paint(juce::Graphics& g)
 	g.setColour(juce::Colour(51, 51, juce::uint8(51), juce::uint8(128)));
 	g.fillRect(getWidth() / 2,  0, 1, getHeight());
 	g.fillRect(0, getHeight() / 2, getLocalBounds().getWidth(), 1);
-	g.fillEllipse(freq * getWidth(), getHeight() * 0.5f - (resonance * getHeight() * 0.5f), 8, 8);
+	//g.fillEllipse(freq * getWidth(), getHeight() * 0.5f - (resonance * getHeight() * 0.5f), 8, 8);
 
 	g.strokePath(frequencyResponse, juce::PathStrokeType(2.0f));
 
@@ -24,7 +24,6 @@ void FilterGraph::paint(juce::Graphics& g)
 	juce::FillType fillType = juce::FillType();
 	fillType.setColour(juce::Colour(51, 51, 51));
 	g.setFillType(fillType);
-	//g.fillPath(uiPath);
 	g.setColour(juce::Colour(51, 51, 51));
 	g.strokePath(p1, juce::PathStrokeType(2));
 

@@ -206,9 +206,15 @@ void GrainMotherAudioProcessor::setVelocityRand(float velocity)
 
 void GrainMotherAudioProcessor::updateFilterGraph()
 {
-    if (coefficients)
+    if (coefficients && *parameters.getRawParameterValue("filterType") != 0) {
         coefficients->getMagnitudeForFrequencyArray(frequencies.data(), magnitudes.data(), frequencies.size(), this->getSampleRate());
+    }
+    else
+    {
+        std::fill(magnitudes.begin(), magnitudes.end(), 0.0);
+    }
 }
+        
 
 void GrainMotherAudioProcessor::updateFilterPath(juce::Path& p, juce::Rectangle<int> b, double pixels)
 {
@@ -216,7 +222,6 @@ void GrainMotherAudioProcessor::updateFilterPath(juce::Path& p, juce::Rectangle<
         updateFilterGraph();
         shouldUpdateFilter = false;
     }
-
     p.startNewSubPath(b.getX(), magnitudes[0] > 0 ? b.getCentreY() - pixels * std::log(magnitudes[0]) / std::log(2) : b.getBottom());
     const double xStep = static_cast<double> (b.getWidth()) / frequencies.size();
     for (size_t i = 1; i < frequencies.size(); ++i)
@@ -365,9 +370,15 @@ void GrainMotherAudioProcessor::updateFilter()
     int type = *parameters.getRawParameterValue("filterType");
     float freq = *parameters.getRawParameterValue("filterFreq");
     float res = *parameters.getRawParameterValue("resonance");
+
     switch (type)
     {
     case 0:
+    {
+        coefficients = juce::dsp::IIR::Coefficients<float>::Coefficients();
+        break;
+    }
+    case 1:
     {
         coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq, res);
         break;
@@ -392,7 +403,6 @@ void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     juce::MidiBuffer::Iterator i(midiMessages);
     juce::MidiMessage m;
     int t;
-
     while (i.getNextEvent(m, t))
     {
         if (m.isNoteOn()) {
@@ -416,14 +426,14 @@ void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     puroEngine.processBlock(buffer, activeNotes);
 
-    juce::dsp::AudioBlock <float> block(buffer);
 
-
-    updateFilter();
-
-    *lowPassFilter.state = *coefficients;
-
-    lowPassFilter.process(juce::dsp::ProcessContextReplacing<float>(block));
+    if (*parameters.getRawParameterValue("filterType") != 0) {
+        juce::dsp::AudioBlock <float> block(buffer);
+        updateFilter();
+        *lowPassFilter.state = *coefficients;
+        lowPassFilter.process(juce::dsp::ProcessContextReplacing<float>(block));
+    }
+    
 
     auto output = (float)*masterVolumeParameter;
     if (output == previousGain)
