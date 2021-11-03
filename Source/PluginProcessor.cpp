@@ -45,11 +45,11 @@ GrainMotherAudioProcessor::GrainMotherAudioProcessor()
         , lowPassFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 10000.0f, 0.1)), coefficients(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 10000.0f, 0.1))
 #endif
 {
-    frequencies.resize(300);
+    frequencies.resize(150);
     for (size_t i = 0; i < frequencies.size(); ++i) {
-        frequencies[i] = 20.0 * std::pow(2.0, i / 30.0);
+        frequencies[i] = 20.0 * std::pow(2.0, i / 15.0);
     }
-    magnitudes.resize(300);
+    magnitudes.resize(150);
     intervalParameter = parameters.getRawParameterValue("interval");
     durationParameter = parameters.getRawParameterValue("duration");
     panningParameter = parameters.getRawParameterValue("panning");

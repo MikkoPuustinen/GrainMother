@@ -10,7 +10,11 @@ AudioformHandle::AudioformHandle(AudioformEvents* par) : interval(50), intervalH
 void AudioformHandle::mouseDown(const juce::MouseEvent& e)
 {
     draggingComponent = !intervalHandle.contains(e.getPosition().getX(), e.getPosition().getY());
-    if (intervalHandle.contains(e.getPosition().getX(), e.getPosition().getY()))
+    if (e.mods.isCommandDown()) 
+    {
+        state = STATE_NONE;
+    }
+    else if (intervalHandle.contains(e.getPosition().getX(), e.getPosition().getY()))
     {
         state = STATE_INTERVAL;
     }
@@ -69,7 +73,11 @@ void AudioformHandle::mouseDrag(const juce::MouseEvent& e)
 }
 void AudioformHandle::mouseMove(const juce::MouseEvent& e)
 {
-    if (intervalHandle.contains(e.getPosition().getX(), e.getPosition().getY()))
+    if (e.mods.isCommandDown()) 
+    {
+        cursor = juce::MouseCursor();
+    }
+    else if (intervalHandle.contains(e.getPosition().getX(), e.getPosition().getY()))
     {
         cursor = juce::MouseCursor::UpDownResizeCursor;
     }

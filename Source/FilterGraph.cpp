@@ -7,12 +7,6 @@ FilterGraph::FilterGraph(GrainMotherAudioProcessor& p, juce::AudioProcessorValue
 
 void FilterGraph::paint(juce::Graphics& g)
 {
-	//g.fillAll(juce::Colour(0, 255, 0));
-	//g.setColour(juce::Colour(51, 51, juce::uint8(51), juce::uint8(128)));
-	//g.fillRect(getWidth() / 2,  0, 1, getHeight());
-	//g.fillRect(0, getHeight() / 2, getLocalBounds().getWidth(), 1);
-	//g.fillEllipse(freq * getWidth(), getHeight() * 0.5f - (resonance * getHeight() * 0.5f), 8, 8);
-
 	g.strokePath(frequencyResponse, juce::PathStrokeType(2.0f));
 
 	juce::Path p1, p2;
@@ -33,7 +27,6 @@ void FilterGraph::paint(juce::Graphics& g)
 	fillType.setColour(juce::Colour(255, 105, juce::uint8(128), juce::uint8(128)));
 	g.setFillType(fillType);
 	g.fillPath(p1);
-
 }
 
 void FilterGraph::mouseDown(const juce::MouseEvent& e)

@@ -13,84 +13,7 @@
 #include "LookAndFeel.h"
 #include "AudioFormEvents.h"
 #include "FilterGraph.h"
-
-//==============================================================================
-/**
-*
-* 
-*
-*/
-
-class AudioformComponent : public::juce::Component
-    , private::juce::ChangeListener
-{
-public:
-    AudioformComponent(int sourceSamplesPerThumbnailSample,
-        juce::AudioFormatManager& formatManager,
-        juce::AudioThumbnailCache& cache,
-        GrainMotherAudioProcessor& p)
-        : thumbnail(sourceSamplesPerThumbnailSample, formatManager, cache), audioProcessor(p), start(3.0f), end(400.0f)
-    {
-        setBufferedToImage(true);
-        thumbnail.addChangeListener(this);
-    }
-    ~AudioformComponent()
-    {
-        thumbnail.removeChangeListener(this);
-    }
-
-    void paint(juce::Graphics& g) override
-    {
-        if (hasFile())
-            paintIfNoFileLoaded(g);
-        else
-            paintIfFileLoaded(g);
-    }
-    bool hasFile()
-    {
-        return thumbnail.getNumChannels() == 0;
-    }
-    void setFile(const juce::File& file)
-    {
-        thumbnail.setSource(new juce::FileInputSource(file));
-    }
-    void paintIfNoFileLoaded(juce::Graphics& g)
-    {
-        g.fillAll(juce::Colour(246, 244, 243));
-        g.setColour(juce::Colours::darkgrey);
-        g.drawFittedText("No File Loaded", getLocalBounds(), juce::Justification::centred, 1);
-    }
-
-    void paintIfFileLoaded(juce::Graphics& g)
-    {
-        g.fillAll(juce::Colour(246, 244, 243));
-        g.setColour(juce::Colour(255, 105, 120));
-        thumbnail.drawChannels(g, getLocalBounds(), 0.0, thumbnail.getTotalLength(), 1.0f);
-        g.setColour(juce::Colour(230, 57, 70));
-        thumbnail.drawChannels(g, getLocalBounds(), 0.0, thumbnail.getTotalLength(), 0.55f);        
-    }
-    void changeListenerCallback(juce::ChangeBroadcaster* source) override
-    {
-        if (source == &thumbnail)
-            thumbnailChanged();
-    }
-
-private:
-
-    void thumbnailChanged()
-    {
-        repaint();
-    }
-    juce::AudioThumbnail thumbnail;
-    GrainMotherAudioProcessor& audioProcessor;
-
-    float start;
-    float end;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioformComponent)
-
-};
-
+#include "AudioformComponent.h"
 
 /**
 *
@@ -118,10 +41,10 @@ public:
         for (auto&& grain : grains) {
             auto& x = grain.get();
             if (x.direction == 0) { 
-                g.setColour(juce::Colour(102, 153, 204));  // right to left
+                g.setColour(juce::Colour((juce::uint8)102, (juce::uint8)153, (juce::uint8)204, 0.7f));  // right to left
             }
             else {
-                g.setColour(juce::Colour(108, 105, 141)); // left to right
+                g.setColour(juce::Colour((juce::uint8)108, (juce::uint8)105, (juce::uint8)141, 0.7f)); // left to right
             }
             int heightDev;
             if (maxDev < 1) {
@@ -152,6 +75,7 @@ private:
 class GrainMotherAudioProcessorEditor  : public juce::AudioProcessorEditor
                                        , public juce::Button::Listener
                                        , public juce::FileDragAndDropTarget
+                                       , public AudioformEvents::Listener
 {
 public:
     typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
@@ -164,6 +88,8 @@ public:
     void paintOverChildren(juce::Graphics& g) override;
 
     void resized() override;
+
+    void onZoomChange(double start, double end) override;
 
     void buttonClicked(juce::Button* button) override;
 

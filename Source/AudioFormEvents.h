@@ -3,25 +3,55 @@
 #include "PluginProcessor.h"
 #include "AudioFormHandle.h"
 
+
 class AudioformEvents : public juce::Component
                       , public juce::Timer
+                      , public juce::Button::Listener
 {
 public:
     AudioformEvents(GrainMotherAudioProcessor& p, juce::AudioProcessorValueTreeState& vts) :
-        audioProcessor(p), valueTreeState(vts), state(STATE_DRAG), selectableRange(0, 0, 910, 1), events(this)
+        audioProcessor(p), valueTreeState(vts), state(STATE_DRAG), selectableRange(0, 0, 910, 1), events(this), returnFromZoom("what")
     {
         addAndMakeVisible(events);
+        
         events.addMouseListener(this, false);
+        returnFromZoom.addListener(this);
         startTimer(40);
+        setWantsKeyboardFocus(true);
     }
     ~AudioformEvents()
     {
         events.removeMouseListener(this);
     }
 
+    struct Listener
+    {
+        Listener() {};
+        virtual ~Listener() {};
+
+        virtual void onZoomChange(double start, double end) {};
+    };
+
+    void setListener(Listener* newListener)
+    {
+        listener = newListener;
+    }
+    void buttonClicked(juce::Button* button)
+    {
+        if (button == &returnFromZoom)
+        {  
+            listener->onZoomChange(0, 1);
+            removeChildComponent(&returnFromZoom);
+        }
+    }
     void mouseDown(const juce::MouseEvent& e) override
     {
-        if (selectableRange.contains(e.getPosition().getX(), e.getPosition().getY()))
+        if (e.mods.isCommandDown())
+        {
+            state = STATE_ZOOM;
+            eventStart = e.position.x;
+        }
+        else if (selectableRange.contains(e.getPosition().getX(), e.getPosition().getY()))
         {
             state = STATE_NONE;
         }
@@ -77,12 +107,11 @@ public:
 
         valueTreeState.getParameter("duration")->setValueNotifyingHost(dur2);
         valueTreeState.getParameter("readpos")->setValueNotifyingHost(readpos);
-        //audioProcessor.setDuration(dur2);
-        //audioProcessor.setReadpos(readpos);
     }
     void resized() override
     {
         events.setBounds(0, 0, getLocalBounds().getWidth(), getLocalBounds().getHeight());
+        returnFromZoom.setBounds(20, 20, 30, 30);
         left.setBounds(start - 10, 0, 10, getLocalBounds().getHeight());
         right.setBounds(end, 0, 10, getLocalBounds().getHeight());
     }
@@ -102,42 +131,80 @@ public:
         events.repaint();
     }
 
+    void setNewZoom() 
+    {
+        listener->onZoomChange(zoomStart / getLocalBounds().getWidth(), zoomEnd / getLocalBounds().getWidth());
+        zoomStart = 0;
+        zoomEnd = 0;
+    }
+
     void mouseUp(const juce::MouseEvent& event) override
     {
         switch (state)
         {
-        case STATE_DRAG:
-        {
-            valueTreeState.getParameter("duration")->endChangeGesture();
-            valueTreeState.getParameter("readpos")->endChangeGesture();
-            break;
+            case STATE_DRAG:
+            {
+                valueTreeState.getParameter("duration")->endChangeGesture();
+                valueTreeState.getParameter("readpos")->endChangeGesture();
+                break;
+            }
+            case STATE_ZOOM:
+            {
+                setNewZoom();
+                state = STATE_NONE;
+                addAndMakeVisible(returnFromZoom);
+                
+                break;
+            }
         }
-        }
+        eventStart = 0;
     }
     void mouseDrag(const juce::MouseEvent& event) override
     {
         switch (state)
         {
-        case STATE_DRAG:
-        {
-            const float x = event.position.x;
-            float s = 0;
-            float e = 0;
-            if (x < eventStart) {
-                s = x;
-                e = eventStart;
+            case STATE_DRAG:
+            {
+                const float x = event.position.x;
+                float s = 0;
+                float e = 0;
+                if (x < eventStart) {
+                    s = x;
+                    e = eventStart;
+                }
+                else {
+                    e = x;
+                    s = eventStart;
+                }
+                setProcessorValues(e, s);
+                break;
             }
-            else {
-                e = x;
-                s = eventStart;
+            case STATE_ZOOM:
+            {
+                const float x = event.position.x;
+                if (x < eventStart) {
+                    zoomStart = x;
+                    zoomEnd = eventStart;
+                }
+                else {
+                    zoomEnd = x;
+                    zoomStart = eventStart;
+                }
+                break;
             }
-            setProcessorValues(e, s);
-            break;
-        }
         }
     }
     void paint(juce::Graphics& g) override
     {
+
+    }
+    void paintOverChildren(juce::Graphics& g) override
+    {
+        if (state == STATE_ZOOM)
+        {
+            g.setColour(juce::Colour(0.0f, 0.0f, 0.0f, 0.5f));
+            g.fillRect(zoomStart, 0.0f, zoomEnd - zoomStart, (float)getLocalBounds().getHeight());
+        }
     }
 
     float getInterval()
@@ -156,7 +223,6 @@ public:
 private:
     juce::AudioProcessorValueTreeState& valueTreeState;
     GrainMotherAudioProcessor& audioProcessor;
-
     AudioformHandle events;
 
     juce::Rectangle<float> left;
@@ -164,7 +230,7 @@ private:
 
     juce::Rectangle<float> selectableRange;
 
-    enum state { STATE_DRAG, STATE_MOVE, STATE_INTERVAL, STATE_NONE, STATE_LEFT, STATE_RIGHT } state;
+    enum state { STATE_DRAG, STATE_MOVE, STATE_INTERVAL, STATE_NONE, STATE_LEFT, STATE_RIGHT, STATE_ZOOM } state;
     float end;
     float start;
 
@@ -173,6 +239,11 @@ private:
     float duration;
 
     float eventStart;
+
+    float zoomStart;
+    float zoomEnd;
+    Listener* listener;
+    juce::TextButton returnFromZoom;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioformEvents)
 };

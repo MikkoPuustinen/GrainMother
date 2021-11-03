@@ -34,8 +34,10 @@ GrainMotherSliderLookAndFeel& GrainMotherSliderLookAndFeel::getInstance()
 
 Typeface::Ptr GrainMotherSliderLookAndFeel::getTypefaceForFont(const Font& f)
 {
-    static Typeface::Ptr myFont = Typeface::createSystemTypefaceFor(BinaryData::ComfortaaLight_ttf,
-        BinaryData::ComfortaaLight_ttfSize);
+    static Typeface::Ptr myFont = Typeface::createSystemTypefaceFor(
+        BinaryData::ComfortaaLight_ttf,
+        BinaryData::ComfortaaLight_ttfSize
+    );
     return myFont;
 }
 
@@ -197,13 +199,26 @@ void GrainMotherSliderLookAndFeel::drawButtonBackground(juce::Graphics& g, juce:
 {
     auto bounds = button.getLocalBounds().toFloat().reduced(0.5f, 0.5f);
     auto bColor = shouldDrawButtonAsHighlighted ? button.findColour(TextButton::buttonOnColourId) : button.findColour(TextButton::buttonColourId);
-
+    DBG(button.getButtonText());
     g.setColour(bColor);
-    Point<float> centre(bounds.getWidth() * 0.5f, bounds.getHeight() * 0.5f);
-    Rectangle<float> h(centre.getX(), centre.getY(), bounds.getWidth() * 0.5f, 5.0f);
-    g.fillRoundedRectangle(h.withCentre(centre), 2.0f);
-    Rectangle<float> v(centre.getX(), centre.getY(), 5.0f, bounds.getWidth() * 0.5f);
-    g.fillRoundedRectangle(v.withCentre(centre), 2.0f);
+    if (button.getButtonText() == "what")
+    {
+        Path path;
+        path.startNewSubPath((float)bounds.getCentreX() + bounds.getWidth() / 6, (float)bounds.getY());
+        path.lineTo((float)bounds.getCentreX() - bounds.getWidth() / 6, (float)bounds.getCentreY());
+        path.lineTo((float)bounds.getCentreX() + bounds.getWidth() / 6, (float)bounds.getBottom());
+
+       // g.setColour(box.findColour(ComboBox::textColourId).withAlpha((box.isEnabled() ? 0.9f : 0.2f)));
+        g.strokePath(path, PathStrokeType(4.0f));
+    }
+    else 
+    {
+        Point<float> centre(bounds.getWidth() * 0.5f, bounds.getHeight() * 0.5f);
+        Rectangle<float> h(centre.getX(), centre.getY(), bounds.getWidth() * 0.5f, 5.0f);
+        g.fillRoundedRectangle(h.withCentre(centre), 2.0f);
+        Rectangle<float> v(centre.getX(), centre.getY(), 5.0f, bounds.getWidth() * 0.5f);
+        g.fillRoundedRectangle(v.withCentre(centre), 2.0f);
+    }
 }
 
 void GrainMotherSliderLookAndFeel::drawButtonText(juce::Graphics&, juce::TextButton&, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)

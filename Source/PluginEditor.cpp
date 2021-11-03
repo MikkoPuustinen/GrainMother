@@ -15,13 +15,14 @@ GrainMotherAudioProcessorEditor::GrainMotherAudioProcessorEditor (GrainMotherAud
     , valueTreeState(vts)
     , audioProcessor (p)
     , audioFileDialogButton("loadAudioButton")
-    , thumbnailCache(5)
-    , audioformComponent(1024, formatManager, thumbnailCache, p)
-    , audioformEvents(p, vts)
+    , thumbnailCache(1)
+    , audioformComponent(128, formatManager, thumbnailCache, p)
     , grainVisualizer(p, vts)
+    , audioformEvents(p, vts)
     , filterGraph(p, vts)
     , draggingFiles(false)
 {
+    audioformEvents.setListener(this);
     resonanceSlider.setName("resonance");
     filterFreqSlider.setName("filterFreq");
     setOpaque(true);
@@ -235,7 +236,7 @@ void GrainMotherAudioProcessorEditor::resized()
     //resonanceSlider.setBounds(getWidth() - 100, getHeight() - 180, 60, 80);
     filterCombo.setBounds(getWidth() - 80, sliderPStartY - 40, 70, 25);
 
-    juce::Rectangle<int> thumbnailBounds(50, 80, getWidth() - 100, 300);
+    juce::Rectangle<int> thumbnailBounds(50 - 4, 80, getWidth() - 92, 300);
     audioformComponent.setBounds(thumbnailBounds);
     juce::Rectangle<int> eventBounds(50 - 4, 80, getWidth() - 92, 300);
     audioformEvents.setBounds(eventBounds);
@@ -246,6 +247,11 @@ void GrainMotherAudioProcessorEditor::resized()
 
     audioFileDialogButton.setBounds({ getWidth() - 90, thumbnailBounds.getY(), 50, 50 });
 
+}
+
+void GrainMotherAudioProcessorEditor::onZoomChange(double start, double end)
+{
+    audioformComponent.changeZoom(start, end);
 }
 
 void GrainMotherAudioProcessorEditor::filesDropped(const juce::StringArray& files, int x, int y) {
