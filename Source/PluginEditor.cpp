@@ -289,7 +289,7 @@ void GrainMotherAudioProcessorEditor::buttonClicked(juce::Button* button)
         juce::FileChooser fileChooser("Please select the moose you want to load...",
             juce::File::getSpecialLocation(juce::File::userHomeDirectory),
             "*.wav");
-
+        
         if (fileChooser.browseForFileToOpen())
         {
             juce::File file(fileChooser.getResult());

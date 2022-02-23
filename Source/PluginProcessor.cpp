@@ -375,7 +375,7 @@ void GrainMotherAudioProcessor::updateFilter()
     {
     case 0:
     {
-        coefficients = juce::dsp::IIR::Coefficients<float>::Coefficients();
+        coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq, res);
         break;
     }
     case 1:
@@ -398,6 +398,9 @@ void GrainMotherAudioProcessor::updateFilter()
 
 void GrainMotherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    for (int i = 0; i < buffer.getNumChannels(); ++i)
+        buffer.clear(i, 0, buffer.getNumSamples());
+    
     juce::ScopedNoDenormals noDenormals;
 
     juce::MidiBuffer::Iterator i(midiMessages);

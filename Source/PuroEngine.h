@@ -181,7 +181,7 @@ public:
     void processBlock(juce::AudioBuffer<float>& writeBuffer, juce::Array<juce::Array<int>> activeNotes)
     {
         // TODO potential bug if number of output channels is not 2
-        errorif(writeBuffer.getNumChannels() < 2, "BUG: implement different write buffer sizes");
+        //errorif(writeBuffer.getNumChannels() < 2, "BUG: implement different write buffer sizes");
 
         auto dstBuffer = puro::buffer_from_juce_buffer<puro::buffer<2, float>>(writeBuffer);
 
@@ -196,7 +196,7 @@ public:
         }
         else if (numChannels != 0)
         {
-            errorif(true, "source buffer channel number not supported");
+            //errorif(true, "source buffer channel number not supported");
         }
         else
         {
@@ -235,7 +235,7 @@ public:
                 midiNote = activeNotes[i][0] - 60;
                 const float interval = intervalParam.get();
                 timer.interval = puro::math::round(durationParam.centre / interval);
-                errorif(timer.interval < 0, "Well this is unexpected, timer shouldn't be let to do that");
+                //errorif(timer.interval < 0, "Well this is unexpected, timer shouldn't be let to do that");
                 int direction = 0;
                 if (directionParam.get() > (float)std::rand() / RAND_MAX)
                 {
