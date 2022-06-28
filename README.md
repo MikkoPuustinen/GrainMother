@@ -1,6 +1,6 @@
 # GrainMother
 
-A granular synth plugin
+A granular synth plugin with a beautiful user interface.
 
 ### Setup
 
